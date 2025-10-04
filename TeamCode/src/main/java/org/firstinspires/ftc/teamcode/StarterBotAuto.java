@@ -75,15 +75,15 @@ public class StarterBotAuto extends OpMode
      * velocity. Here we are setting the target and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1125;
-    final double LAUNCHER_MIN_VELOCITY = 1075;
+    final double LAUNCHER_TARGET_VELOCITY = 1125.0;
+    final double LAUNCHER_MIN_VELOCITY = 1075.0;
 
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
      * that each shot will score.
      */
-    final double TIME_BETWEEN_SHOTS = 2;
+    final double TIME_BETWEEN_SHOTS = 2.0;
 
     /*
      * Here we capture a few variables used in driving the robot. DRIVE_SPEED and ROTATE_SPEED
@@ -99,11 +99,11 @@ public class StarterBotAuto extends OpMode
     final double WHEEL_DIAMETER_MM = 96;
     final double ENCODER_TICKS_PER_REV = 537.7;
     final double TICKS_PER_MM = (ENCODER_TICKS_PER_REV / (WHEEL_DIAMETER_MM * Math.PI));
-    final double TRACK_WIDTH_MM = 404;
+    final double TRACK_WIDTH_MM = 404.0;
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
 
-    double robotRotationAngle = 45;
+    double robotRotationAngle = 45.0;
 
     /*
      * Here we create three timers which we use in different parts of our code. Each of these is an
