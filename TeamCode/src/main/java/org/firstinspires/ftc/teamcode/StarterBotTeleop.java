@@ -147,8 +147,8 @@ public class StarterBotTeleop extends OpMode{
          */
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         /*
          * Here we set our launcher to the RUN_USING_ENCODER runmode.
@@ -183,7 +183,7 @@ public class StarterBotTeleop extends OpMode{
          * both work to feed the ball into the robot.
          */
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        rightFeeder.setDirection(DcMotorSimple.Direction.FORWARD);
         /*
          * Tell the driver that initialization is complete.
          */
@@ -224,16 +224,16 @@ public class StarterBotTeleop extends OpMode{
          * Here we give the user control of the speed of the launcher motor without automatically
          * queuing a shot.
          */
-        if (gamepad1.y) {
+        if (gamepad2.y) {
             launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-        } else if (gamepad1.b) { // stop flywheel
+        } else if (gamepad2.b) { // stop flywheel
             launcher.setVelocity(STOP_SPEED);
         }
 
         /*
          * Now we call our "Launch" function.
          */
-        launch(gamepad1.rightBumperWasPressed());
+        launch(gamepad2.rightBumperWasPressed());
 
         /*
          * Show the state and motor powers
@@ -252,18 +252,30 @@ public class StarterBotTeleop extends OpMode{
     }
 
     void arcadeDrive(double forward, double rotate) {
-        frontLeftPower = forward + rotate;
-        frontRightPower = forward - rotate;
-        backLeftPower = forward + rotate;
-        backRightPower = forward - rotate;
-        /*
-         * Send calculated power to wheels
-         */
+        double y = -gamepad1.left_stick_y;
+        double x = gamepad1.left_stick_x * 1.1;
+        double r = gamepad1.right_stick_x;
+
+        double frontLeftPower  = y + x + r;
+        double frontRightPower = y - x - r;
+        double backLeftPower   = y - x + r;
+        double backRightPower  = y + x - r;
+
+        double max = Math.max(Math.abs(frontLeftPower), Math.max(Math.abs(frontRightPower), Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))));
+
+        if (max > 1.0) {
+            frontLeftPower /= max;
+            frontRightPower /= max;
+            backLeftPower /= max;
+            backRightPower /= max;
+        }
+
         frontLeftDrive.setPower(frontLeftPower);
         frontRightDrive.setPower(frontRightPower);
-        backLeftDrive.setPower(frontLeftPower);
-        backRightDrive.setPower(frontRightPower);
+        backLeftDrive.setPower(backLeftPower);
+        backRightDrive.setPower(backRightPower);
     }
+
 
     void launch(boolean shotRequested) {
         switch (launchState) {
