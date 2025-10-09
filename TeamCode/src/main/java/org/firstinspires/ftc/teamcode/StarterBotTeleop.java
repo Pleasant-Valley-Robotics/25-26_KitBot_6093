@@ -62,7 +62,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name = "KitbotTeleop", group = "StarterBot")
 //@Disabled
 public class StarterBotTeleop extends OpMode{
-    final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME_SECONDS = 0.30; //The feeder servos run this long when a shot is requested. (originally 0.20)
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     final double FULL_SPEED = 1.0;
 
@@ -72,7 +72,7 @@ public class StarterBotTeleop extends OpMode{
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1125;
+    final double LAUNCHER_TARGET_VELOCITY = 1300; // Originally 1125
     final double LAUNCHER_MIN_VELOCITY = 1075;
 
     // Declare OpMode members.
@@ -184,6 +184,8 @@ public class StarterBotTeleop extends OpMode{
          */
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFeeder.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        launcher.setDirection(DcMotorSimple.Direction.REVERSE);
         /*
          * Tell the driver that initialization is complete.
          */
@@ -241,6 +243,12 @@ public class StarterBotTeleop extends OpMode{
         telemetry.addData("State", launchState);
         telemetry.addData("Motors", "frontleft (%.2f), frontright (%.2f),backleft (%.2f), backright (%.2f)", frontLeftPower, frontRightPower, backLeftPower, backRightPower);
         telemetry.addData("motorSpeed", launcher.getVelocity());
+        telemetry.addData("Servo Direction R", rightFeeder.getDirection());
+        telemetry.addData("Servo Direction L", leftFeeder.getDirection());
+        telemetry.addData("Servo Power R", rightFeeder.getPower());
+        telemetry.addData("Servo Power L", rightFeeder.getPower());
+
+        telemetry.update();
 
     }
 
@@ -286,9 +294,9 @@ public class StarterBotTeleop extends OpMode{
                 break;
             case SPIN_UP:
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
-                    launchState = LaunchState.LAUNCH;
-                }
+                //if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                launchState = LaunchState.LAUNCH;
+                //}
                 break;
             case LAUNCH:
                 leftFeeder.setPower(FULL_SPEED);
