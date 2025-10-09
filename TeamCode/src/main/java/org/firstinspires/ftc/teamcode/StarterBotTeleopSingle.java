@@ -157,7 +157,7 @@ public class StarterBotTeleopSingle extends OpMode{
          * through any wiring.
          */
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        launcher.setDirection(DcMotor.Direction.REVERSE);
         /*
          * Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to
          * slow down much faster when it is coasting. This creates a much more controllable
