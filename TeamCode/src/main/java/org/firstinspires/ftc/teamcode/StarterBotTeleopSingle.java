@@ -43,13 +43,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
-
-import java.util.Locale;
-
 /*
  * This file includes a teleop (driver-controlled) file for the goBILDA® StarterBot for the
  * 2025-2026 FIRST® Tech Challenge season DECODE™. It leverages a differential/Skid-Steer
@@ -65,11 +58,10 @@ import java.util.Locale;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "KitbotTeleop", group = "StarterBot")
+@TeleOp(name = "KitbotTeleop(made for ojas)", group = "StarterBot")
 //@Disabled
-public class StarterBotTeleop extends OpMode{
-    final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested. (originally 0.20)
-    final double TRIPLE_FEED_TIME_SECONDS = 2.50;
+public class StarterBotTeleopSingle extends OpMode{
+    final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     final double FULL_SPEED = 1.0;
 
@@ -79,8 +71,8 @@ public class StarterBotTeleop extends OpMode{
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1300; // Originally 1125
-    final double LAUNCHER_MIN_VELOCITY = 1200;
+    final double LAUNCHER_TARGET_VELOCITY = 1125;
+    final double LAUNCHER_MIN_VELOCITY = 1075;
 
     // Declare OpMode members.
     private DcMotor frontLeftDrive = null;
@@ -91,10 +83,7 @@ public class StarterBotTeleop extends OpMode{
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
 
-    private GoBildaPinpointDriver odo;
-
     ElapsedTime feederTimer = new ElapsedTime();
-    ElapsedTime tripleFeederTime = new ElapsedTime();
 
     /*
      * TECH TIP: State Machines
@@ -119,8 +108,7 @@ public class StarterBotTeleop extends OpMode{
         LAUNCHING,
     }
 
-    private LaunchState leftLaunchState;
-    private LaunchState rightLaunchState;
+    private LaunchState launchState;
 
     // Setup a variable for each drive wheel to save power level for telemetry
     double frontLeftPower;
@@ -134,8 +122,7 @@ public class StarterBotTeleop extends OpMode{
      */
     @Override
     public void init() {
-        leftLaunchState = LaunchState.IDLE;
-        rightLaunchState = LaunchState.IDLE;
+        launchState = LaunchState.IDLE;
 
         /*
          * Initialize the hardware variables. Note that the strings used here as parameters
@@ -149,7 +136,6 @@ public class StarterBotTeleop extends OpMode{
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
         rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
@@ -162,11 +148,6 @@ public class StarterBotTeleop extends OpMode{
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        odo.setOffsets(-84.0, -168.0, DistanceUnit.MM);
-        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-        odo.resetPosAndIMU();
 
         /*
          * Here we set our launcher to the RUN_USING_ENCODER runmode.
@@ -202,20 +183,12 @@ public class StarterBotTeleop extends OpMode{
          */
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFeeder.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        launcher.setDirection(DcMotorSimple.Direction.REVERSE);
         /*
          * Tell the driver that initialization is complete.
          */
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("X offset", odo.getXOffset(DistanceUnit.INCH));
-        telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.INCH));
-        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
-        telemetry.addData("Heading Scalar", odo.getYawScalar());
-        telemetry.update();
-
     }
-
+    
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit START
      */
@@ -259,33 +232,14 @@ public class StarterBotTeleop extends OpMode{
         /*
          * Now we call our "Launch" function.
          */
-        if (rightLaunchState == LaunchState.IDLE) {
-            launch(gamepad1.leftBumperWasPressed());
-        }
-        if (leftLaunchState == LaunchState.IDLE) {
-        tripleLaunch(gamepad1.rightBumperWasPressed());
-}
+        launch(gamepad1.rightBumperWasPressed());
+
         /*
          * Show the state and motor powers
          */
-        telemetry.addData("State", leftLaunchState);
-        telemetry.addData("Motors", "frontleft (%.2f), frontright (%.2f),backleft (%.2f), backright (%.2f)", frontLeftDrive.getPower(), frontRightDrive.getPower(), backLeftDrive.getPower(), backRightDrive.getPower());
+        telemetry.addData("State", launchState);
+        telemetry.addData("Motors", "frontleft (%.2f), frontright (%.2f),backleft (%.2f), backright (%.2f)", frontLeftPower, frontRightPower, backLeftPower, backRightPower);
         telemetry.addData("motorSpeed", launcher.getVelocity());
-        telemetry.addData("Servo Direction R", rightFeeder.getDirection());
-        telemetry.addData("Servo Direction L", leftFeeder.getDirection());
-        telemetry.addData("Servo Power R", rightFeeder.getPower());
-        telemetry.addData("Servo Power L", rightFeeder.getPower());
-
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        String velocity = String.format(Locale.US,"{XVel: %.3f, YVel: %.3f, HVel: %.3f}", odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH), odo.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
-
-        telemetry.addData("Status", odo.getDeviceStatus());
-
-        telemetry.update();
 
     }
 
@@ -321,58 +275,29 @@ public class StarterBotTeleop extends OpMode{
         backRightDrive.setPower(backRightPower);
     }
 
-    void tripleLaunch(boolean shotRequested) {
-        switch (rightLaunchState) {
-            case IDLE:
-                if (shotRequested) {
-                    rightLaunchState = LaunchState.SPIN_UP;
-                }
-                break;
-            case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
-                    rightLaunchState = LaunchState.LAUNCH;
-                }
-                break;
-            case LAUNCH:
-                leftFeeder.setPower(FULL_SPEED);
-                rightFeeder.setPower(FULL_SPEED);
-                tripleFeederTime.reset();
-                rightLaunchState = LaunchState.LAUNCHING;
-                break;
-            case LAUNCHING:
-                if (tripleFeederTime.seconds() > TRIPLE_FEED_TIME_SECONDS) {
-                    rightLaunchState = LaunchState.IDLE;
-                    leftFeeder.setPower(STOP_SPEED);
-                    rightFeeder.setPower(STOP_SPEED);
-                }
-                break;
-        }
-    }
-    void launch(boolean shotRequested) {
-        switch (leftLaunchState) {
-            case IDLE:
-                if (shotRequested) {
-                    leftLaunchState = LaunchState.SPIN_UP;
-                }
-                break;
-            case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
-                    leftLaunchState = LaunchState.LAUNCH;
-                    feederTimer.reset();
 
+    void launch(boolean shotRequested) {
+        switch (launchState) {
+            case IDLE:
+                if (shotRequested) {
+                    launchState = LaunchState.SPIN_UP;
+                }
+                break;
+            case SPIN_UP:
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                    launchState = LaunchState.LAUNCH;
                 }
                 break;
             case LAUNCH:
                 leftFeeder.setPower(FULL_SPEED);
                 rightFeeder.setPower(FULL_SPEED);
                 feederTimer.reset();
-                leftLaunchState = LaunchState.LAUNCHING;
+                launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
-                    leftLaunchState = LaunchState.IDLE;
+                    launchState = LaunchState.IDLE;
                     leftFeeder.setPower(STOP_SPEED);
                     rightFeeder.setPower(STOP_SPEED);
                 }
