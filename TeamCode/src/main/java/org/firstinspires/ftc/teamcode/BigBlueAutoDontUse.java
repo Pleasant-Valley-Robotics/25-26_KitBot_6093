@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name="Blue Big Auto - kitbot", group="Robot")
-public class BigBlueAuto extends AutoTemplate {
+public class BigBlueAutoDontUse extends AutoTemplate {
     public void init() {
         setupAuto();
     }
