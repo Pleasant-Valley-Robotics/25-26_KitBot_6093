@@ -62,7 +62,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-public abstract class AutoTemplate extends OpMode {
+public abstract class AutoTemplateODO extends OpMode {
 
     final double FEED_TIME = 0.30; //The feeder servos run this long when a shot is requested.
 
@@ -123,6 +123,9 @@ public abstract class AutoTemplate extends OpMode {
     private CRServo rightFeeder = null;
 
     private GoBildaPinpointDriver odo;
+
+    //This auto scores 3 points by leaving the launch line and getting ready to shoot
+    public abstract void runOpMode();
 
 
     /*
