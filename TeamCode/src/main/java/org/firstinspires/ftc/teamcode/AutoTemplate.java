@@ -34,17 +34,22 @@ package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 
 /*
@@ -62,7 +67,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-public abstract class AutoTemplate extends OpMode {
+public abstract class AutoTemplate extends LinearOpMode {
 
     final double FEED_TIME = 0.30; //The feeder servos run this long when a shot is requested.
 
@@ -97,6 +102,7 @@ public abstract class AutoTemplate extends OpMode {
     final double ENCODER_TICKS_PER_REV = 537.7;
     final double TICKS_PER_MM = (ENCODER_TICKS_PER_REV / (WHEEL_DIAMETER_MM * Math.PI));
     final double TRACK_WIDTH_MM = 404.0;
+    final double P_DRIVE_GAIN = 0.01;
 
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
@@ -121,6 +127,8 @@ public abstract class AutoTemplate extends OpMode {
     private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
+
+    private IMU imu         = null;      // Control/Expansion Hub IMU
 
     private GoBildaPinpointDriver odo;
 
@@ -184,6 +192,8 @@ public abstract class AutoTemplate extends OpMode {
          * mapping and instantiating all of the motor variables, as well as telling the motors how they will be programmed
          */
 
+        waitForStart();
+        resetRuntime();
 
         /*
          * Here we set the first step of our autonomous state machine by setting autoStep = AutoStep.LAUNCH.
@@ -206,6 +216,21 @@ public abstract class AutoTemplate extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class,"launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
         rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
+
+        /* The next two lines define Hub orientation.
+         * The Default Orientation (shown) is when a hub is mounted horizontally with the printed logo pointing UP and the USB port pointing FORWARD.
+         *
+         * To Do:  EDIT these two lines to match YOUR mounting configuration.
+         */
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+
+        // Now initialize the IMU with this mounting orientation
+        // This sample expects the IMU to be in a REV Hub and named "imu".
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
         odo.setOffsets(-84.0, -168.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
@@ -301,7 +326,7 @@ public abstract class AutoTemplate extends OpMode {
         return false;
     }
 
-    public boolean gotoWithOdo(double speed, double targetX, double targetY) {
+    public void gotoWithOdo(double speed, double targetX, double targetY) {
         /*
          * Here we calculate the correct amount of power to give to each motor to navigate to a spot on the field.
          * Keep in mind this should only be run while the robot is facing straight forward
@@ -309,53 +334,96 @@ public abstract class AutoTemplate extends OpMode {
 
         final double TOLERANCE_INCH = 5;
 
-        odo.update();
-
-        Pose2D startPos = odo.getPosition();
-
-        double distX = targetX - startPos.getX(DistanceUnit.INCH);
-        double distY = targetY - startPos.getY(DistanceUnit.INCH);
-
-        double totalSideLength = Math.sqrt(distX * distX + distY * distY);
-
-        double powerX = (distX / totalSideLength) * speed;
-        double powerY = (distY / totalSideLength) * speed;
-
-        double frontLeftPower  = powerY + powerX;
-        double frontRightPower = powerY - powerX;
-        double backLeftPower   = powerY - powerX;
-        double backRightPower  = powerY + powerX;
-
-        autonomousState = AutonomousState.TRAVELING;
-
-        frontLeftDrive.setPower(frontLeftPower);
-        frontRightDrive.setPower(frontRightPower);
-        backLeftDrive.setPower(backLeftPower);
-        backRightDrive.setPower(backRightPower);
-
-
-
-        if (autonomousState == AutonomousState.TRAVELING) {
+        while (Math.abs(targetX - odo.getPosX(DistanceUnit.INCH)) > TOLERANCE_INCH || Math.abs(targetY - odo.getPosY(DistanceUnit.INCH)) > TOLERANCE_INCH) { // While not within tolerance
             odo.update();
 
-            telemetry.addData("Position: X",odo.getPosY(DistanceUnit.INCH));
-            telemetry.addData("Position: y", odo.getPosX(DistanceUnit.INCH));
-            telemetry.addData("Target Position: x", targetX);
-            telemetry.addData("Target Position: y", targetY);
-            telemetry.addData("Distance: x", distX);
-            telemetry.addData("Distance: y", distY);
+            Pose2D startPos = odo.getPosition();
 
-            telemetry.update();
+            double distX = targetX - startPos.getX(DistanceUnit.INCH);
+            double distY = targetY - startPos.getY(DistanceUnit.INCH);
+
+            double totalSideLength = Math.sqrt(distX * distX + distY * distY);
+
+            double powerX = (distX / totalSideLength) * speed;
+            double powerY = (distY / totalSideLength) * speed;
+
+            double frontLeftPower = powerY + powerX;
+            double frontRightPower = powerY - powerX;
+            double backLeftPower = powerY - powerX;
+            double backRightPower = powerY + powerX;
+
+            autonomousState = AutonomousState.TRAVELING;
+
+            frontLeftDrive.setPower(frontLeftPower);
+            frontRightDrive.setPower(frontRightPower);
+            backLeftDrive.setPower(backLeftPower);
+            backRightDrive.setPower(backRightPower);
+
+
+            if (autonomousState == AutonomousState.TRAVELING) {
+                odo.update();
+
+                telemetry.addData("Position: X", odo.getPosY(DistanceUnit.INCH));
+                telemetry.addData("Position: y", odo.getPosX(DistanceUnit.INCH));
+                telemetry.addData("Target Position: x", targetX);
+                telemetry.addData("Target Position: y", targetY);
+                telemetry.addData("Distance: x", distX);
+                telemetry.addData("Distance: y", distY);
+
+                telemetry.update();
+            }
         }
 
-        if (Math.abs(targetX - odo.getPosX(DistanceUnit.INCH)) > TOLERANCE_INCH || Math.abs(targetY - odo.getPosY(DistanceUnit.INCH)) > TOLERANCE_INCH) {
-            autonomousState = AutonomousState.COMPLETE;
-            telemetry.addLine("Movement complete.");
-            telemetry.update();
-            return true;
-        }
-        return false;
+        autonomousState = AutonomousState.COMPLETE;
+        telemetry.addLine("Movement complete.");
+        telemetry.update();
     }
+
+    public void holdHeading(double maxTurnSpeed, double targetHeading) {
+        final double TOLERANCE_DEGREES = 30;
+
+        double currentHeading = getHeading();
+        double headingDif = targetHeading - currentHeading;
+        double correction;
+
+        while (Math.abs(headingDif) >= TOLERANCE_DEGREES) { // If it's close enough to our targetHeading, end early
+            currentHeading = getHeading();
+            headingDif = targetHeading - currentHeading;
+            correction = Range.clip(headingDif * P_DRIVE_GAIN, -1, 1);
+
+            double turnSpeed = Range.clip(correction, -maxTurnSpeed, maxTurnSpeed);
+
+            frontLeftDrive.setPower(-turnSpeed);
+            frontRightDrive.setPower(turnSpeed);
+            backLeftDrive.setPower(-turnSpeed);
+            backRightDrive.setPower(turnSpeed);
+
+            telemetry.addData("Target Heading:", targetHeading);
+            telemetry.addData("Current Heading:", currentHeading);
+            telemetry.addData("Correction", correction);
+            telemetry.addData("Turn Speed:", turnSpeed);
+
+            telemetry.update();
+
+        }
+        telemetry.addData("Target Heading:", targetHeading);
+        telemetry.addData("Current Heading:", currentHeading);
+        telemetry.addData("Correction", null);
+        telemetry.addData("Turn Speed:", null);
+
+        telemetry.update();
+    }
+
+
+
+    /**
+     * read the Robot heading directly from the IMU (in degrees)
+     */
+    public double getHeading() {
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        return orientation.getYaw(AngleUnit.DEGREES);
+    }
+
 
 
     /**
