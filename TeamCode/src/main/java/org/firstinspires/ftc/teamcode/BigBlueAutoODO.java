@@ -2,14 +2,14 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name="Blue Big Auto - kitbot", group="Robot")
-public class BigBlueAuto extends AutoTemplate {
+@Autonomous(name="Blue Big Auto", group="Kitbot")
+public class BigBlueAutoODO extends AutoTemplateODO {
     @Override
     public void runOpMode() {
         setupAuto();
 
         while (opModeIsActive()) {
-            holdHeading(.30, 0);
+            turnToHeading(.30, 0);
         }
     }
 }

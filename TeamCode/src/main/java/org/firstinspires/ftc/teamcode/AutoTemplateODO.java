@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 2025 Base 10 Assets, LLC
  * All rights reserved.
  *
@@ -67,7 +67,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-public abstract class AutoTemplate extends LinearOpMode {
+public abstract class AutoTemplateODO extends LinearOpMode {
 
     final double FEED_TIME = 0.30; //The feeder servos run this long when a shot is requested.
 
@@ -144,46 +144,7 @@ public abstract class AutoTemplate extends LinearOpMode {
      * We can use higher level code to cycle through these states, but this allows us to write
      * functions and autonomous routines in a way that avoids loops within loops, and "waits."
      */
-    private enum LaunchState {
-        IDLE,
-        PREPARE,
-        LAUNCH,
-    }
 
-    /*
-     * Here we create the instance of LaunchState that we use in code. This creates a unique object
-     * which can store the current condition of the shooter. In other applications, you may have
-     * multiple copies of the same enum which have different names. Here we just have one.
-     */
-    private LaunchState launchState;
-
-    /*
-     * Here is our auto state machine enum. This captures each action we'd like to do in auto.
-     */
-    private enum AutonomousState {
-        LAUNCH,
-        TRAVELING,
-        WAIT_FOR_LAUNCH,
-        DRIVING_AWAY_FROM_GOAL,
-        ROTATING,
-        DRIVING_OFF_LINE,
-        COMPLETE;
-    }
-
-    private AutonomousState autonomousState;
-
-    /*
-     * Here we create an enum not to create a state machine, but to capture which alliance we are on.
-     */
-    private enum Alliance {
-        RED,
-        BLUE;
-    }
-
-    /*
-     * When we create the instance of our enum we can also assign a default state.
-     */
-    private Alliance alliance = Alliance.RED;
 
 
     public void setupAuto() {
@@ -200,8 +161,6 @@ public abstract class AutoTemplate extends LinearOpMode {
                 * Later in our code, we will progress through the state machine by moving to other enum members.
          * We do the same for our launcher state machine, setting it to IDLE before we use it later.
          */
-        autonomousState = AutonomousState.LAUNCH;
-        launchState = LaunchState.IDLE;
 
 
         /*
@@ -222,7 +181,7 @@ public abstract class AutoTemplate extends LinearOpMode {
          *
          * To Do:  EDIT these two lines to match YOUR mounting configuration.
          */
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -287,45 +246,6 @@ public abstract class AutoTemplate extends LinearOpMode {
 
     }
 
-    /**
-     * Launches one ball, when a shot is requested spins up the motor and once it is above a minimum
-     * velocity, runs the feeder servos for the right amount of time to feed the next ball.
-     * @param shotRequested "true" if the user would like to fire a new shot, and "false" if a shot
-     *                      has already been requested and we need to continue to move through the
-     *                      state machine and launch the ball.
-     * @return "true" for one cycle after a ball has been successfully launched, "false" otherwise.
-     */
-    public boolean launch(boolean shotRequested){
-        switch (launchState) {
-            case IDLE:
-                if (shotRequested) {
-                    launchState = LaunchState.PREPARE;
-                    shotTimer.reset();
-                }
-                break;
-            case PREPARE:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY){
-                    launchState = LaunchState.LAUNCH;
-                    leftFeeder.setPower(1);
-                    rightFeeder.setPower(1);
-                    feederTimer.reset();
-                }
-                break;
-            case LAUNCH:
-                if (feederTimer.seconds() > FEED_TIME) {
-                    leftFeeder.setPower(0);
-                    rightFeeder.setPower(0);
-
-                    if(shotTimer.seconds() > TIME_BETWEEN_SHOTS){
-                        launchState = LaunchState.IDLE;
-                        return true;
-                    }
-                }
-        }
-        return false;
-    }
-
     public void gotoWithOdo(double speed, double targetX, double targetY) {
         /*
          * Here we calculate the correct amount of power to give to each motor to navigate to a spot on the field.
@@ -344,15 +264,23 @@ public abstract class AutoTemplate extends LinearOpMode {
 
             double totalSideLength = Math.sqrt(distX * distX + distY * distY);
 
-            double powerX = (distX / totalSideLength) * speed;
-            double powerY = (distY / totalSideLength) * speed;
+            double powerX = (distX / totalSideLength) * speed * P_DRIVE_GAIN;
+            double powerY = (distY / totalSideLength) * speed * P_DRIVE_GAIN;
+
 
             double frontLeftPower = powerY + powerX;
             double frontRightPower = powerY - powerX;
             double backLeftPower = powerY - powerX;
             double backRightPower = powerY + powerX;
 
-            autonomousState = AutonomousState.TRAVELING;
+            double maxPower = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
+
+            if (maxPower > 1.0) {
+                frontLeftPower /= maxPower;
+                frontRightPower /= maxPower;
+                backLeftPower /= maxPower;
+                backRightPower /= maxPower;
+            }
 
             frontLeftDrive.setPower(frontLeftPower);
             frontRightDrive.setPower(frontRightPower);
@@ -360,27 +288,22 @@ public abstract class AutoTemplate extends LinearOpMode {
             backRightDrive.setPower(backRightPower);
 
 
-            if (autonomousState == AutonomousState.TRAVELING) {
-                odo.update();
+            odo.update();
 
-                telemetry.addData("Position: X", odo.getPosY(DistanceUnit.INCH));
-                telemetry.addData("Position: y", odo.getPosX(DistanceUnit.INCH));
-                telemetry.addData("Target Position: x", targetX);
-                telemetry.addData("Target Position: y", targetY);
-                telemetry.addData("Distance: x", distX);
-                telemetry.addData("Distance: y", distY);
+            telemetry.addData("Position: X", odo.getPosX(DistanceUnit.INCH));
+            telemetry.addData("Position: y", odo.getPosY(DistanceUnit.INCH));
+            telemetry.addData("Target Position: x", targetX);
+            telemetry.addData("Target Position: y", targetY);
+            telemetry.addData("Distance: x", distX);
+            telemetry.addData("Distance: y", distY);
 
-                telemetry.update();
-            }
+            telemetry.update();
+
         }
-
-        autonomousState = AutonomousState.COMPLETE;
-        telemetry.addLine("Movement complete.");
-        telemetry.update();
     }
 
-    public void holdHeading(double maxTurnSpeed, double targetHeading) {
-        final double TOLERANCE_DEGREES = 30;
+    public void turnToHeading(double maxTurnSpeed, double targetHeading) {
+        final double TOLERANCE_DEGREES = 10;
 
         double currentHeading = getHeading();
         double headingDif = targetHeading - currentHeading;
@@ -389,9 +312,13 @@ public abstract class AutoTemplate extends LinearOpMode {
         while (Math.abs(headingDif) >= TOLERANCE_DEGREES) { // If it's close enough to our targetHeading, end early
             currentHeading = getHeading();
             headingDif = targetHeading - currentHeading;
+            // Normalize to [-180, 180]
+            while (headingDif > 180) headingDif -= 360;
+            while (headingDif < -180) headingDif += 360;
+
             correction = Range.clip(headingDif * P_DRIVE_GAIN, -1, 1);
 
-            double turnSpeed = Range.clip(correction, -maxTurnSpeed, maxTurnSpeed);
+            double turnSpeed = Range.clip(headingDif * P_DRIVE_GAIN, -maxTurnSpeed, maxTurnSpeed);
 
             frontLeftDrive.setPower(-turnSpeed);
             frontRightDrive.setPower(turnSpeed);
@@ -415,7 +342,6 @@ public abstract class AutoTemplate extends LinearOpMode {
     }
 
 
-
     /**
      * read the Robot heading directly from the IMU (in degrees)
      */
@@ -424,108 +350,6 @@ public abstract class AutoTemplate extends LinearOpMode {
         return orientation.getYaw(AngleUnit.DEGREES);
     }
 
-
-
-    /**
-     * @param speed From 0-1
-     * @param distance In specified unit
-     * @param distanceUnit the unit of measurement for distance
-     * @param holdSeconds the number of seconds to wait at position before returning true.
-     * @return "true" if the motors are within tolerance of the target position for more than
-     * holdSeconds. "false" otherwise.
-     */
-    public boolean drive(double speed, double distance, DistanceUnit distanceUnit, double holdSeconds) {
-        final double TOLERANCE_MM = 10;
-        /*
-         * In this function we use a DistanceUnits. This is a class that the FTC SDK implements
-         * which allows us to accept different input units depending on the user's preference.
-         * To use these, put both a double and a DistanceUnit as parameters in a function and then
-         * call distanceUnit.toMm(distance). This will return the number of mm that are equivalent
-         * to whatever distance in the unit specified. We are working in mm for this, so that's the
-         * unit we request from distanceUnit. But if we want to use inches in our function, we could
-         * use distanceUnit.toInches() instead!
-         */
-        double targetPosition = (distanceUnit.toMm(distance) * TICKS_PER_MM);
-
-        backLeftDrive.setTargetPosition((int) targetPosition);
-        backRightDrive.setTargetPosition((int) targetPosition);
-        frontLeftDrive.setTargetPosition((int) targetPosition);
-        frontRightDrive.setTargetPosition((int) targetPosition);
-
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        backLeftDrive.setPower(speed);
-        backRightDrive.setPower(speed);
-        frontLeftDrive.setPower(speed);
-        frontRightDrive.setPower(speed);
-
-        /*
-         * Here we check if we are within tolerance of our target position or not. We calculate the
-         * absolute error (distance from our setpoint regardless of if it is positive or negative)
-         * and compare that to our tolerance. If we have not reached our target yet, then we reset
-         * the driveTimer. Only after we reach the target can the timer count higher than our
-         * holdSeconds variable.
-         */
-        if(Math.abs(targetPosition - frontLeftDrive.getCurrentPosition()) > (TOLERANCE_MM * TICKS_PER_MM)){
-            driveTimer.reset();
-        }
-
-        return (driveTimer.seconds() > holdSeconds);
-    }
-
-    /**
-     * @param speed From 0-1
-     * @param angle the amount that the robot should rotate
-     * @param angleUnit the unit that angle is in
-     * @param holdSeconds the number of seconds to wait at position before returning true.
-     * @return True if the motors are within tolerance of the target position for more than
-     *         holdSeconds. False otherwise.
-     */
-    public boolean rotate(double speed, double angle, AngleUnit angleUnit, double holdSeconds){
-        final double TOLERANCE_MM = 10;
-
-        /*
-         * Here we establish the number of mm that our drive wheels need to cover to create the
-         * requested angle. We use radians here because it makes the math much easier.
-         * Our robot will have rotated one radian when the wheels of the robot have driven
-         * 1/2 of the track width of our robot in a circle. This is also the radius of the circle
-         * that the robot tracks when it is rotating. So, to find the number of mm that our wheels
-         * need to travel, we just need to multiply the requested angle in radians by the radius
-         * of our turning circle.
-         */
-        double targetMm = angleUnit.toRadians(angle)*(TRACK_WIDTH_MM/2);
-
-        /*
-         * We need to set the left motor to the inverse of the target so that we rotate instead
-         * of driving straight.
-         */
-        double leftTargetPosition = -(targetMm*TICKS_PER_MM);
-        double rightTargetPosition = targetMm*TICKS_PER_MM;
-
-        backLeftDrive.setTargetPosition((int) leftTargetPosition);
-        backRightDrive.setTargetPosition((int) rightTargetPosition);
-        frontLeftDrive.setTargetPosition((int) leftTargetPosition);
-        frontRightDrive.setTargetPosition((int) rightTargetPosition);
-
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        backLeftDrive.setPower(speed);
-        backRightDrive.setPower(speed);
-        frontLeftDrive.setPower(speed);
-        frontRightDrive.setPower(speed);
-
-        if((Math.abs(leftTargetPosition - frontLeftDrive.getCurrentPosition())) > (TOLERANCE_MM * TICKS_PER_MM)){
-            driveTimer.reset();
-        }
-
-        return (driveTimer.seconds() > holdSeconds);
-    }
 }
 
 
