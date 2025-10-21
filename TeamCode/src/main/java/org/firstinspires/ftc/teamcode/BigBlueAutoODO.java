@@ -9,7 +9,7 @@ public class BigBlueAutoODO extends AutoTemplateODO {
         setupAuto();
 
         while (opModeIsActive()) {
-            turnToHeading(.30, 0);
+            telemetry.addData("Current Heading", getHeading());
         }
     }
 }

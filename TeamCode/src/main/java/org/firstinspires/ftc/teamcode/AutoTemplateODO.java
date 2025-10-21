@@ -309,7 +309,7 @@ public abstract class AutoTemplateODO extends LinearOpMode {
         double headingDif = targetHeading - currentHeading;
         double correction;
 
-        while (Math.abs(headingDif) >= TOLERANCE_DEGREES) { // If it's close enough to our targetHeading, end early
+        while (Math.abs(headingDif) >= TOLERANCE_DEGREES && opModeIsActive()) { // If it's close enough to our targetHeading, end early
             currentHeading = getHeading();
             headingDif = targetHeading - currentHeading;
             // Normalize to [-180, 180]
@@ -333,6 +333,12 @@ public abstract class AutoTemplateODO extends LinearOpMode {
             telemetry.update();
 
         }
+
+        frontLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+
         telemetry.addData("Target Heading:", targetHeading);
         telemetry.addData("Current Heading:", currentHeading);
         telemetry.addData("Correction", null);
