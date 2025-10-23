@@ -79,8 +79,15 @@ public class StarterBotTeleop extends OpMode{
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1300; // Originally 1125
-    final double LAUNCHER_MIN_VELOCITY = 1200;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
+
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;
+
+    double LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CLOSE_MIN_VELOCITY;
+
+
 
     // Declare OpMode members.
     private DcMotor frontLeftDrive = null;
@@ -251,20 +258,33 @@ public class StarterBotTeleop extends OpMode{
          * queuing a shot.
          */
         if (gamepad1.y) {
-            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+            LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CLOSE_MIN_VELOCITY;
+            launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
         } else if (gamepad1.b) { // stop flywheel
             launcher.setVelocity(STOP_SPEED);
+        }
+        else if (gamepad1.x){
+            LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CYCLE_MIN_VELOCITY;
+            launcher.setVelocity(LAUNCHER_CYCLE_TARGET_VELOCITY);
         }
 
         /*
          * Now we call our "Launch" function.
          */
         if (rightLaunchState == LaunchState.IDLE) {
-            launch(gamepad1.leftBumperWasPressed());
+            //launch(gamepad1.leftBumperWasPressed());
         }
         if (leftLaunchState == LaunchState.IDLE) {
-        tripleLaunch(gamepad1.rightBumperWasPressed());
-}
+            //tripleLaunch(gamepad1.rightBumperWasPressed());
+        }
+        if(gamepad1.left_bumper){
+            leftFeeder.setPower(1);
+            rightFeeder.setPower(1);
+        }
+        else{
+            leftFeeder.setPower(0);
+            rightFeeder.setPower(0);
+        }
         /*
          * Show the state and motor powers
          */
@@ -329,8 +349,8 @@ public class StarterBotTeleop extends OpMode{
                 }
                 break;
             case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_CLOSE_MIN_VELOCITY) {
                     rightLaunchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -357,8 +377,8 @@ public class StarterBotTeleop extends OpMode{
                 }
                 break;
             case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_CLOSE_MIN_VELOCITY) {
                     leftLaunchState = LaunchState.LAUNCH;
                     feederTimer.reset();
 
