@@ -365,9 +365,9 @@ public class StarterBotAuto extends OpMode
 
             case ROTATING:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = 45;
+                    robotRotationAngle = 60;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = -45;
+                    robotRotationAngle = -60;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
