@@ -79,6 +79,9 @@ public class StarterBotTeleop extends OpMode{
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
+
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1540.0;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1530.0;
     final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
     final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
 
@@ -266,6 +269,10 @@ public class StarterBotTeleop extends OpMode{
         else if (gamepad1.x){
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CYCLE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_CYCLE_TARGET_VELOCITY);
+        } else if (gamepad1.a) {
+            LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_FAR_MIN_VELOCITY;
+            launcher.setVelocity(LAUNCHER_FAR_TARGET_VELOCITY);
+
         }
 
         /*
@@ -280,6 +287,9 @@ public class StarterBotTeleop extends OpMode{
         if(gamepad1.left_bumper){
             leftFeeder.setPower(1);
             rightFeeder.setPower(1);
+        } else if (gamepad1.right_bumper) {
+            leftFeeder.setPower(-1);
+            rightFeeder.setPower(-1);
         }
         else{
             leftFeeder.setPower(0);
