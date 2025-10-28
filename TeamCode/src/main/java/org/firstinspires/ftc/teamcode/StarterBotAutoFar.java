@@ -123,7 +123,7 @@ public class StarterBotAutoFar extends OpMode
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
 
-    int shotsToCycle = 2;
+    int shotsToCycle = 0;
 
     double robotRotationAngle = 45.0;
 
@@ -393,9 +393,9 @@ public class StarterBotAutoFar extends OpMode
                  * and move onto the next state.
                  */
                 if(cycle(false)) {
-                    shotsToCycle -= 1;
                     if(shotsToCycle > 0) {
                         autonomousState = AutonomousState.CYCLE;
+                        shotsToCycle -= 1;
                     } else {
                         frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -419,8 +419,11 @@ public class StarterBotAutoFar extends OpMode
                         shotsToCycle = 1;
                     } else { // Default is id 21 (gpp)
                         shotsToCycle = 0;
-                    } 
+                    }
+                } else {
+                    shotsToCycle = 0;
                 }
+
 
                 autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
                 break;
@@ -452,7 +455,7 @@ public class StarterBotAutoFar extends OpMode
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.CYCLE;
+                    autonomousState = AutonomousState.WAIT_FOR_CYCLE;
                 }
                 break;
 

@@ -4,3 +4,4 @@
 .gradle/buildOutputCleanup
 .gradle/file-system.probe
 .idea/caches/deviceStreaming.xml
+local.properties
