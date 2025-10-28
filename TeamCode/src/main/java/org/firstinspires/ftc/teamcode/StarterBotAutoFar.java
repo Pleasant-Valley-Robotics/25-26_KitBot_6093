@@ -419,7 +419,7 @@ public class StarterBotAutoFar extends OpMode
                         shotsToCycle = 1;
                     } else { // Default is id 21 (gpp)
                         shotsToCycle = 0;
-                    }
+                    } 
                 }
 
                 autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
