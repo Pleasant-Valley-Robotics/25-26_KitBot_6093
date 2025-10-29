@@ -66,7 +66,6 @@ import java.util.Locale;
  */
 
 @TeleOp(name = "KitbotTeleop", group = "StarterBot")
-//@Disabled
 public class StarterBotTeleop extends OpMode{
     final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested. (originally 0.20)
     final double TRIPLE_FEED_TIME_SECONDS = 2.50;
@@ -299,7 +298,6 @@ public class StarterBotTeleop extends OpMode{
          * Show the state and motor powers
          */
         telemetry.addData("State", leftLaunchState);
-        telemetry.addData("Motors", "frontleft (%.2f), frontright (%.2f),backleft (%.2f), backright (%.2f)", frontLeftDrive.getPower(), frontRightDrive.getPower(), backLeftDrive.getPower(), backRightDrive.getPower());
         telemetry.addData("motorSpeed", launcher.getVelocity());
         telemetry.addData("Servo Direction R", rightFeeder.getDirection());
         telemetry.addData("Servo Direction L", leftFeeder.getDirection());

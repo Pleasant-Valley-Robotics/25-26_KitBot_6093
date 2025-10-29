@@ -34,6 +34,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -47,11 +48,13 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDir
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /*
@@ -77,6 +80,7 @@ public class StarterBotAutoFar extends OpMode
      * The variable to store our instance of the AprilTag processor.
      */
     private AprilTagProcessor aprilTag;
+    private HuskyLens huskyLens;
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
@@ -93,17 +97,17 @@ public class StarterBotAutoFar extends OpMode
      * velocity. Here we are setting the target and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_FAR_TARGET_VELOCITY = 1540.0;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1530.0;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 400; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 450; //480
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1560.0;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1550.0;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480; //480
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
      * that each shot will score.
      */
     final double TIME_BETWEEN_SHOTS = 4.0;
-    final double TIME_BETWEEN_CYCLES = 2.0;
+    final double TIME_BETWEEN_CYCLES = 3.0;
 
     /*
      * Here we capture a few variables used in driving the robot. DRIVE_SPEED and ROTATE_SPEED
@@ -132,6 +136,8 @@ public class StarterBotAutoFar extends OpMode
      * "object," so even though they are all an instance of ElapsedTime(), they count independently
      * from each other.
      */
+    double timeBeforeStart = 0;
+    private ElapsedTime startTimer = new ElapsedTime();
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime driveTimer = new ElapsedTime();
@@ -215,11 +221,16 @@ public class StarterBotAutoFar extends OpMode
         launchState = LaunchState.IDLE;
 
 
+
+
+
         /*
          * Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
          * step (using the FTC Robot Controller app on the driver's station).
          */
+
+        huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
@@ -227,6 +238,15 @@ public class StarterBotAutoFar extends OpMode
         launcher = hardwareMap.get(DcMotorEx.class,"launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
         rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
+
+
+
+        Deadline rateLimit = new Deadline(1, TimeUnit.SECONDS);
+
+        rateLimit.expire();
+
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
+
 
 
         /*
@@ -308,9 +328,21 @@ public class StarterBotAutoFar extends OpMode
             alliance = Alliance.BLUE;
         }
 
+
+        if (gamepad1.dpad_up) {
+            timeBeforeStart += 0.20;
+        }
+        if (gamepad1.dpad_down) {
+            timeBeforeStart -= 0.20;
+        }
+
+
+        telemetry.addData("Wait Time", timeBeforeStart);
+
         telemetry.addData("Press X", "for BLUE");
         telemetry.addData("Press B", "for RED");
         telemetry.addData("Selected Alliance", alliance);
+
     }
 
     /*
@@ -318,6 +350,7 @@ public class StarterBotAutoFar extends OpMode
      */
     @Override
     public void start() {
+        startTimer.reset();
     }
 
     /*
@@ -334,6 +367,10 @@ public class StarterBotAutoFar extends OpMode
          * of the members of the enum for a match, since if we find the "break" line in one case,
          * we know our enum isn't reflecting a different state.
          */
+        //if (startTimer.seconds() >= timeBeforeStart) {
+          //  return;
+        //}
+
         switch (autonomousState){
             /*
              * Since the first state of our auto is LAUNCH, this is the first "case" we encounter.
@@ -393,9 +430,9 @@ public class StarterBotAutoFar extends OpMode
                  * and move onto the next state.
                  */
                 if(cycle(false)) {
-                    if(shotsToCycle > 0) {
+                    shotsToCycle -= 1;
+                    if (shotsToCycle > 0) {
                         autonomousState = AutonomousState.CYCLE;
-                        shotsToCycle -= 1;
                     } else {
                         frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -405,23 +442,38 @@ public class StarterBotAutoFar extends OpMode
                         autonomousState = AutonomousState.LAUNCH;
                     }
                 }
+
                 break;
             case READ_APRIL_TAG:
                 // Sets shotsToCycle based of the obelisk aprilTag
                 // Default is gpp
+                /*
                 List<AprilTagDetection> currentDetections = aprilTag.getDetections();
                 if (!currentDetections.isEmpty()) {
-                    AprilTagDetection targetAprilTag = currentDetections.get(0);
-                    int id = targetAprilTag.id;
-                    if (id == 22) {
-                        shotsToCycle = 2;
-                    } else if (id == 23) {
-                        shotsToCycle = 1;
-                    } else { // Default is id 21 (gpp)
-                        shotsToCycle = 0;
+                    for (int i = 0; i < currentDetections.size(); i++) {
+                        if (currentDetections.get(i).id == 22) {
+                            shotsToCycle = 2;
+                            break;
+                        } else if (currentDetections.get(i).id == 23) {
+                            shotsToCycle = 1;
+                        }
+                    } // Default is gpp with 0 cycles
+                }
+                */
+
+
+                HuskyLens.Block[] blocks = huskyLens.blocks();
+                telemetry.addData("Block count", blocks.length);
+                if (blocks.length > 0) {
+                    for (int i = 0; i < blocks.length; i++) {
+                        telemetry.addData("Block", blocks[i].toString());
+                        if (blocks[i].id == 2) {
+                            shotsToCycle = 2;
+                            break;
+                        } else if (blocks[i].id == 3) {
+                            shotsToCycle = 1;
+                        }
                     }
-                } else {
-                    shotsToCycle = 0;
                 }
 
 
@@ -434,7 +486,7 @@ public class StarterBotAutoFar extends OpMode
                  * the robot has been within a tolerance of the target position for "holdSeconds."
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
-                if(drive(DRIVE_SPEED, 3, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, 7.5, DistanceUnit.INCH, 1)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -445,9 +497,9 @@ public class StarterBotAutoFar extends OpMode
 
             case ROTATING:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = -25;
+                    robotRotationAngle = -35;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 25;
+                    robotRotationAngle = 35;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
@@ -455,7 +507,11 @@ public class StarterBotAutoFar extends OpMode
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.WAIT_FOR_CYCLE;
+                    if (shotsToCycle == 0) {
+                        autonomousState = AutonomousState.LAUNCH;
+                    } else {
+                        autonomousState = AutonomousState.CYCLE;
+                    }
                 }
                 break;
 
@@ -476,8 +532,10 @@ public class StarterBotAutoFar extends OpMode
          * after the last "case" that runs every loop. This means we can avoid a lot of
          * "copy-and-paste" that non-state machine autonomous routines fall into.
          */
+        telemetry.addData("Cycles", shotsToCycle);
         telemetry.addData("AutoState", autonomousState);
         telemetry.addData("LauncherState", launchState);
+        telemetry.addData("Launcher RPM", launcher.getVelocity());
         //telemetry.addData("Motor Current Positions", "left (%d), right (%d)",
         //        leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
         //telemetry.addData("Motor Target Positions", "left (%d), right (%d)",
