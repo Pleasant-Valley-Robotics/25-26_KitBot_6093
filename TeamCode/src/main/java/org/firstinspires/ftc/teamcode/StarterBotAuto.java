@@ -43,8 +43,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
 
 
 /*
@@ -67,6 +74,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class StarterBotAuto extends OpMode
 {
 
+    private AprilTagProcessor aprilTag;
+    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+    private VisionPortal visionPortal;
+
     final double FEED_TIME = 0.20; //The feeder servos run this long when a shot is requested.
 
     /*
@@ -75,8 +86,11 @@ public class StarterBotAuto extends OpMode
      * velocity. Here we are setting the target and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1125.0;
-    final double LAUNCHER_MIN_VELOCITY = 1075.0;
+
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480; //480
 
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
@@ -84,6 +98,8 @@ public class StarterBotAuto extends OpMode
      * that each shot will score.
      */
     final double TIME_BETWEEN_SHOTS = 2.0;
+    final double TIME_BETWEEN_CYCLES = 3.0;
+
 
     /*
      * Here we capture a few variables used in driving the robot. DRIVE_SPEED and ROTATE_SPEED
@@ -102,6 +118,7 @@ public class StarterBotAuto extends OpMode
     final double TRACK_WIDTH_MM = 404.0;
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
+    int shotsToCycle = 0;
 
     double robotRotationAngle = 45.0;
 
@@ -156,6 +173,9 @@ public class StarterBotAuto extends OpMode
         DRIVING_AWAY_FROM_GOAL,
         ROTATING,
         DRIVING_OFF_LINE,
+        READ_APRIL_TAG,
+        CYCLE,
+        WAIT_FOR_CYCLE,
         COMPLETE;
     }
 
@@ -184,6 +204,7 @@ public class StarterBotAuto extends OpMode
          * Later in our code, we will progress through the state machine by moving to other enum members.
          * We do the same for our launcher state machine, setting it to IDLE before we use it later.
          */
+        initAprilTag();
         autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
         launchState = LaunchState.IDLE;
 
@@ -348,6 +369,39 @@ public class StarterBotAuto extends OpMode
                 }
                 break;
 
+            case CYCLE:
+                cycle(true);
+                autonomousState = StarterBotAuto.AutonomousState.WAIT_FOR_CYCLE;
+                break;
+
+            case WAIT_FOR_CYCLE:
+                /*
+                 * A technique we leverage frequently in this code are functions which return a
+                 * boolean. We are using this function in two ways. This function actually moves the
+                 * motors and servos in a way that launches the ball, but it also "talks back" to
+                 * our main loop by returning either "true" or "false". We've written it so that
+                 * after the shot we requested has been fired, the function will return "true" for
+                 * one cycle. Once the launch function returns "true", we proceed in the code, removing
+                 * one from the shotsToFire variable. If shots remain, we move back to the LAUNCH
+                 * state on our state machine. Otherwise, we reset the encoders on our drive motors
+                 * and move onto the next state.
+                 */
+                if(cycle(false)) {
+                    shotsToCycle -= 1;
+                    if (shotsToCycle > 0) {
+                        autonomousState = StarterBotAuto.AutonomousState.CYCLE;
+                    } else {
+                        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        launcher.setVelocity(0);
+                        autonomousState = StarterBotAuto.AutonomousState.LAUNCH;
+                    }
+                }
+
+                break;
+
             case DRIVING_AWAY_FROM_GOAL:
                 /*
                  * This is another function that returns a boolean. This time we return "true" if
@@ -360,6 +414,48 @@ public class StarterBotAuto extends OpMode
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     autonomousState = AutonomousState.LAUNCH;
+                }
+                break;
+
+            case READ_APRIL_TAG:
+                if(alliance == Alliance.RED){
+                    robotRotationAngle = 60;
+                } else if (alliance == Alliance.BLUE){
+                    robotRotationAngle = -60;
+                }
+                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
+                    frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                }
+                List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+                if (!currentDetections.isEmpty()) {
+                    for (int i = 0; i < currentDetections.size(); i++) {
+                        if (currentDetections.get(i).id == 22) {
+                            shotsToCycle = 2;
+                            break;
+                        } else if (currentDetections.get(i).id == 23) {
+                            shotsToCycle = 1;
+                        }
+                    } // Default is gpp with 0 cycles
+                }
+                if(alliance == Alliance.RED){
+                    robotRotationAngle = -60;
+                } else if (alliance == Alliance.BLUE){
+                    robotRotationAngle = 60;
+                }
+                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
+                    frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                }
+                if(shotsToCycle==0){
+                    autonomousState = AutonomousState.LAUNCH;
+                } else {
+                    autonomousState = AutonomousState.CYCLE;
+
                 }
                 break;
 
@@ -427,8 +523,8 @@ public class StarterBotAuto extends OpMode
                 }
                 break;
             case PREPARE:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY){
+                launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_CLOSE_MIN_VELOCITY){
                     launchState = LaunchState.LAUNCH;
                     leftFeeder.setPower(1);
                     rightFeeder.setPower(1);
@@ -442,6 +538,37 @@ public class StarterBotAuto extends OpMode
 
                     if(shotTimer.seconds() > TIME_BETWEEN_SHOTS){
                         launchState = LaunchState.IDLE;
+                        return true;
+                    }
+                }
+        }
+        return false;
+    }
+
+    boolean cycle(boolean shotRequested){
+        switch (launchState) {
+            case IDLE:
+                if (shotRequested) {
+                    launchState = StarterBotAuto.LaunchState.PREPARE;
+                    shotTimer.reset();
+                }
+                break;
+            case PREPARE:
+                launcher.setVelocity(LAUNCHER_CYCLE_TARGET_VELOCITY);
+                if (launcher.getVelocity() > LAUNCHER_CYCLE_MIN_VELOCITY){
+                    launchState = StarterBotAuto.LaunchState.LAUNCH;
+                    leftFeeder.setPower(1);
+                    rightFeeder.setPower(1);
+                    feederTimer.reset();
+                }
+                break;
+            case LAUNCH:
+                if (feederTimer.seconds() > FEED_TIME) {
+                    leftFeeder.setPower(0);
+                    rightFeeder.setPower(0);
+
+                    if(shotTimer.seconds() > TIME_BETWEEN_CYCLES){
+                        launchState = StarterBotAuto.LaunchState.IDLE;
                         return true;
                     }
                 }
@@ -548,6 +675,33 @@ public class StarterBotAuto extends OpMode
         }
 
         return (driveTimer.seconds() > holdSeconds);
+    }
+
+    private void initAprilTag() {
+
+        // Create the AprilTag processor.
+        aprilTag = new AprilTagProcessor.Builder().build();
+
+        // Create the vision portal by using a builder.
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        // Set the camera (webcam vs. built-in RC phone camera).
+        if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        } else {
+            builder.setCamera(BuiltinCameraDirection.BACK);
+        }
+
+
+        // Set and enable the processor.
+        builder.addProcessor(aprilTag);
+
+        // Build the Vision Portal, using the above settings.
+        visionPortal = builder.build();
+
+        // Disable or re-enable the aprilTag processor at any time.
+        //visionPortal.setProcessorEnabled(aprilTag, true);
+
     }
 }
 

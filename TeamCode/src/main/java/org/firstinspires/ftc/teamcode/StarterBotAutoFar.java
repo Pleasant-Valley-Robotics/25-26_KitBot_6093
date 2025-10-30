@@ -447,7 +447,7 @@ public class StarterBotAutoFar extends OpMode
             case READ_APRIL_TAG:
                 // Sets shotsToCycle based of the obelisk aprilTag
                 // Default is gpp
-                /*
+
                 List<AprilTagDetection> currentDetections = aprilTag.getDetections();
                 if (!currentDetections.isEmpty()) {
                     for (int i = 0; i < currentDetections.size(); i++) {
@@ -459,9 +459,9 @@ public class StarterBotAutoFar extends OpMode
                         }
                     } // Default is gpp with 0 cycles
                 }
-                */
 
 
+                /*
                 HuskyLens.Block[] blocks = huskyLens.blocks();
                 telemetry.addData("Block count", blocks.length);
                 if (blocks.length > 0) {
@@ -475,6 +475,8 @@ public class StarterBotAutoFar extends OpMode
                         }
                     }
                 }
+
+                 */
 
 
                 autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
