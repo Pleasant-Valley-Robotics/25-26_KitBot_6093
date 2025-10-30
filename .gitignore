@@ -5,3 +5,5 @@
 .gradle/file-system.probe
 .idea/caches/deviceStreaming.xml
 local.properties
+.gradle/config.properties
+local.properties

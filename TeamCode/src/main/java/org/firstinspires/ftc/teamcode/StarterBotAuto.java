@@ -174,6 +174,8 @@ public class StarterBotAuto extends OpMode
         ROTATING,
         DRIVING_OFF_LINE,
         READ_APRIL_TAG,
+        TURN_TO_TAG,
+        TURN_FROM_TAG,
         CYCLE,
         WAIT_FOR_CYCLE,
         COMPLETE;
@@ -408,27 +410,49 @@ public class StarterBotAuto extends OpMode
                  * the robot has been within a tolerance of the target position for "holdSeconds."
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
-                if(drive(DRIVE_SPEED, -28, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, -36, DistanceUnit.INCH, 1)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.LAUNCH;
+                    autonomousState = AutonomousState.TURN_TO_TAG;
                 }
                 break;
 
-            case READ_APRIL_TAG:
-                if(alliance == Alliance.RED){
-                    robotRotationAngle = 60;
-                } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = -60;
-                }
+            case TURN_TO_TAG:
+                //if(alliance == Alliance.RED){
+                //    robotRotationAngle = 60;
+                //} else if (alliance == Alliance.BLUE){
+                //    robotRotationAngle = -60;
+                //}
+                robotRotationAngle = -60;
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    autonomousState = AutonomousState.READ_APRIL_TAG;
+
                 }
+
+            case TURN_FROM_TAG:
+                robotRotationAngle = 60;
+                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
+                    frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    if(shotsToCycle==0){
+                        autonomousState = AutonomousState.LAUNCH;
+                    } else {
+                        autonomousState = AutonomousState.CYCLE;
+
+                    }
+                }
+
+                break;
+            case READ_APRIL_TAG:
+
                 List<AprilTagDetection> currentDetections = aprilTag.getDetections();
                 if (!currentDetections.isEmpty()) {
                     for (int i = 0; i < currentDetections.size(); i++) {
@@ -440,24 +464,9 @@ public class StarterBotAuto extends OpMode
                         }
                     } // Default is gpp with 0 cycles
                 }
-                if(alliance == Alliance.RED){
-                    robotRotationAngle = -60;
-                } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 60;
-                }
-                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
-                    frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                }
-                if(shotsToCycle==0){
-                    autonomousState = AutonomousState.LAUNCH;
-                } else {
-                    autonomousState = AutonomousState.CYCLE;
+                autonomousState = AutonomousState.TURN_FROM_TAG;
 
-                }
-                break;
+
 
             case ROTATING:
                 if(alliance == Alliance.RED){
@@ -490,8 +499,10 @@ public class StarterBotAuto extends OpMode
          * after the last "case" that runs every loop. This means we can avoid a lot of
          * "copy-and-paste" that non-state machine autonomous routines fall into.
          */
+        telemetry.addData("Cycles", shotsToCycle);
         telemetry.addData("AutoState", autonomousState);
         telemetry.addData("LauncherState", launchState);
+        telemetry.addData("Launcher RPM", launcher.getVelocity());
         //telemetry.addData("Motor Current Positions", "left (%d), right (%d)",
         //        leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
         //telemetry.addData("Motor Target Positions", "left (%d), right (%d)",
@@ -635,7 +646,7 @@ public class StarterBotAuto extends OpMode
      *         holdSeconds. False otherwise.
      */
     boolean rotate(double speed, double angle, AngleUnit angleUnit, double holdSeconds){
-        final double TOLERANCE_MM = 10;
+        final double TOLERANCE_MM = 15;
 
         /*
          * Here we establish the number of mm that our drive wheels need to cover to create the
