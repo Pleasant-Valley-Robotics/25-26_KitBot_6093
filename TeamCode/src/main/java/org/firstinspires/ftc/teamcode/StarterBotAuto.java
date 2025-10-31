@@ -87,17 +87,17 @@ public class StarterBotAuto extends OpMode
      * at. The minimum velocity is a threshold for determining when to fire.
      */
 
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480; //480
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1200; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1100;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 420; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 460; //480
 
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
      * that each shot will score.
      */
-    final double TIME_BETWEEN_SHOTS = 2.0;
+    final double TIME_BETWEEN_SHOTS = 3.0;
     final double TIME_BETWEEN_CYCLES = 3.0;
 
 
@@ -118,7 +118,7 @@ public class StarterBotAuto extends OpMode
     final double TRACK_WIDTH_MM = 404.0;
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
-    int shotsToCycle = 0;
+    int shotsToCycle = 3;
 
     double robotRotationAngle = 45.0;
 
@@ -410,7 +410,7 @@ public class StarterBotAuto extends OpMode
                  * the robot has been within a tolerance of the target position for "holdSeconds."
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
-                if(drive(DRIVE_SPEED, -36, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, -45, DistanceUnit.INCH, 1)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -420,37 +420,41 @@ public class StarterBotAuto extends OpMode
                 break;
 
             case TURN_TO_TAG:
-                //if(alliance == Alliance.RED){
-                //    robotRotationAngle = 60;
-                //} else if (alliance == Alliance.BLUE){
-                //    robotRotationAngle = -60;
-                //}
-                robotRotationAngle = -60;
-                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
+                if(alliance == Alliance.RED){
+                    robotRotationAngle = 90;
+                } else if (alliance == Alliance.BLUE){
+                    robotRotationAngle = -90;
+                }
+
+                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,3)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     autonomousState = AutonomousState.READ_APRIL_TAG;
-
                 }
+                break;
 
             case TURN_FROM_TAG:
-                robotRotationAngle = 60;
+                if(alliance == Alliance.RED){
+                    robotRotationAngle = -90;
+                } else if (alliance == Alliance.BLUE){
+                    robotRotationAngle = 90;
+                }
+
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    if(shotsToCycle==0){
+                    if (shotsToCycle==0) {
                         autonomousState = AutonomousState.LAUNCH;
                     } else {
                         autonomousState = AutonomousState.CYCLE;
-
                     }
                 }
-
                 break;
+
             case READ_APRIL_TAG:
 
                 List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -470,9 +474,9 @@ public class StarterBotAuto extends OpMode
 
             case ROTATING:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = 60;
+                    robotRotationAngle = 120;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = -60;
+                    robotRotationAngle = -120;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
@@ -485,7 +489,7 @@ public class StarterBotAuto extends OpMode
                 break;
 
             case DRIVING_OFF_LINE:
-                if(drive(DRIVE_SPEED, -54, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, -20, DistanceUnit.INCH, 1)){
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
