@@ -97,6 +97,8 @@ public class StarterBotAuto extends OpMode
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
      * that each shot will score.
      */
+
+    double timeBeforeStart = 0;
     final double TIME_BETWEEN_SHOTS = 3.0;
     final double TIME_BETWEEN_CYCLES = 3.0;
 
@@ -303,6 +305,16 @@ public class StarterBotAuto extends OpMode
         } else if (gamepad1.x) {
             alliance = Alliance.BLUE;
         }
+
+        if (gamepad1.dpadUpWasPressed()) {
+            timeBeforeStart += 1;
+        }
+        if (gamepad1.dpadDownWasPressed()) {
+            timeBeforeStart -= 1;
+        }
+
+
+        telemetry.addData("Wait Time", timeBeforeStart);
 
         telemetry.addData("Press X", "for BLUE");
         telemetry.addData("Press B", "for RED");

@@ -329,11 +329,11 @@ public class StarterBotAutoFar extends OpMode
         }
 
 
-        if (gamepad1.dpad_up) {
-            timeBeforeStart += 0.20;
+        if (gamepad1.dpadUpWasPressed()) {
+            timeBeforeStart += 1;
         }
-        if (gamepad1.dpad_down) {
-            timeBeforeStart -= 0.20;
+        if (gamepad1.dpadDownWasPressed()) {
+            timeBeforeStart -= 1;
         }
 
 
