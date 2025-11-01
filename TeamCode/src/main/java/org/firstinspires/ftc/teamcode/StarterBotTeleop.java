@@ -87,6 +87,9 @@ public class StarterBotTeleop extends OpMode{
     final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
     final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;
 
+    final double LAUNCHER_REVERSE_MIN_VELOCITY = -500;
+    final double LAUNCHER_REVERSE_TARGET_VELOCITY = -550;
+
     double LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CLOSE_MIN_VELOCITY;
 
 
@@ -271,8 +274,11 @@ public class StarterBotTeleop extends OpMode{
         } else if (gamepad1.a) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_FAR_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_FAR_TARGET_VELOCITY);
-
+        } else if (gamepad1.dpad_down) {
+            LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_REVERSE_MIN_VELOCITY;
+            launcher.setVelocity(LAUNCHER_REVERSE_TARGET_VELOCITY);
         }
+
 
         /*
          * Now we call our "Launch" function.
