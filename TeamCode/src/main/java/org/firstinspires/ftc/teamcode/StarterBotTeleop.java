@@ -81,8 +81,8 @@ public class StarterBotTeleop extends OpMode{
 
     final double LAUNCHER_FAR_TARGET_VELOCITY = 1540.0;
     final double LAUNCHER_FAR_MIN_VELOCITY = 1530.0;
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1200; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1190;
 
     final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
     final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;
@@ -262,19 +262,19 @@ public class StarterBotTeleop extends OpMode{
          * Here we give the user control of the speed of the launcher motor without automatically
          * queuing a shot.
          */
-        if (gamepad1.y) {
+        if (gamepad2.y) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CLOSE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
-        } else if (gamepad1.b) { // stop flywheel
+        } else if (gamepad2.b) { // stop flywheel
             launcher.setVelocity(STOP_SPEED);
         }
-        else if (gamepad1.x){
+        else if (gamepad2.x){
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CYCLE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_CYCLE_TARGET_VELOCITY);
-        } else if (gamepad1.a) {
+        } else if (gamepad2.a) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_FAR_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_FAR_TARGET_VELOCITY);
-        } else if (gamepad1.dpad_down) {
+        } else if (gamepad2.dpad_down) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_REVERSE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_REVERSE_TARGET_VELOCITY);
         }
@@ -289,10 +289,10 @@ public class StarterBotTeleop extends OpMode{
         if (leftLaunchState == LaunchState.IDLE) {
             //tripleLaunch(gamepad1.rightBumperWasPressed());
         }
-        if(gamepad1.left_bumper){
+        if(gamepad2.left_bumper){
             leftFeeder.setPower(1);
             rightFeeder.setPower(1);
-        } else if (gamepad1.right_bumper) {
+        } else if (gamepad2.right_bumper) {
             leftFeeder.setPower(-1);
             rightFeeder.setPower(-1);
         }

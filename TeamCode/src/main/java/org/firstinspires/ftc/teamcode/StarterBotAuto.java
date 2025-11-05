@@ -78,7 +78,7 @@ public class StarterBotAuto extends OpMode
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     private VisionPortal visionPortal;
 
-    final double FEED_TIME = 0.20; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME = 0.50; //The feeder servos run this long when a shot is requested.
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
@@ -88,9 +88,9 @@ public class StarterBotAuto extends OpMode
      */
 
     final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1200; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1100;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 420; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 460; //480
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1150;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 380; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 400; //480
 
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
@@ -99,7 +99,7 @@ public class StarterBotAuto extends OpMode
      */
 
     double timeBeforeStart = 0;
-    final double TIME_BETWEEN_SHOTS = 3.0;
+    final double TIME_BETWEEN_SHOTS = 4.0;
     final double TIME_BETWEEN_CYCLES = 3.0;
 
 
@@ -120,7 +120,7 @@ public class StarterBotAuto extends OpMode
     final double TRACK_WIDTH_MM = 404.0;
 
     int shotsToFire = 3; //The number of shots to fire in this auto.
-    int shotsToCycle = 3;
+    int shotsToCycle = 0;
 
     double robotRotationAngle = 45.0;
 
@@ -433,12 +433,12 @@ public class StarterBotAuto extends OpMode
 
             case TURN_TO_TAG:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = 90;
+                    robotRotationAngle = 100;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = -90;
+                    robotRotationAngle = -100;
                 }
 
-                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,3)){
+                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,2)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -449,9 +449,9 @@ public class StarterBotAuto extends OpMode
 
             case TURN_FROM_TAG:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = -90;
+                    robotRotationAngle = -100;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 90;
+                    robotRotationAngle = 100;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
@@ -486,9 +486,9 @@ public class StarterBotAuto extends OpMode
 
             case ROTATING:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = 120;
+                    robotRotationAngle = 70;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = -120;
+                    robotRotationAngle = -70;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
@@ -501,7 +501,7 @@ public class StarterBotAuto extends OpMode
                 break;
 
             case DRIVING_OFF_LINE:
-                if(drive(DRIVE_SPEED, -20, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, 25, DistanceUnit.INCH, 1)){
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;

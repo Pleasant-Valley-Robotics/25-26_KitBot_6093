@@ -89,7 +89,7 @@ public class StarterBotAutoFar extends OpMode
      */
     private VisionPortal visionPortal;
 
-    final double FEED_TIME = 0.20; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME = 0.50; //The feeder servos run this long when a shot is requested.
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
@@ -97,10 +97,10 @@ public class StarterBotAutoFar extends OpMode
      * velocity. Here we are setting the target and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_FAR_TARGET_VELOCITY = 1560.0;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1550.0;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480; //480
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1525.0;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1475.0;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 380; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 400; //480
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
@@ -217,7 +217,7 @@ public class StarterBotAutoFar extends OpMode
          * We do the same for our launcher state machine, setting it to IDLE before we use it later.
          */
         initAprilTag();
-        autonomousState = AutonomousState.READ_APRIL_TAG;
+        autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
         launchState = LaunchState.IDLE;
 
 
@@ -479,7 +479,7 @@ public class StarterBotAutoFar extends OpMode
                  */
 
 
-                autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+                autonomousState = AutonomousState.ROTATING;
                 break;
 
             case DRIVING_AWAY_FROM_GOAL:
@@ -488,20 +488,20 @@ public class StarterBotAutoFar extends OpMode
                  * the robot has been within a tolerance of the target position for "holdSeconds."
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
-                if(drive(DRIVE_SPEED, 7.5, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, 7.5, DistanceUnit.INCH, 2)){
                     frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.ROTATING;
+                    autonomousState = AutonomousState.READ_APRIL_TAG;
                 }
                 break;
 
             case ROTATING:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = -35;
+                    robotRotationAngle = -32;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 35;
+                    robotRotationAngle = 32;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
