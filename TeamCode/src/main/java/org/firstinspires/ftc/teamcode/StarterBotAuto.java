@@ -129,6 +129,7 @@ public class StarterBotAuto extends OpMode
      * "object," so even though they are all an instance of ElapsedTime(), they count independently
      * from each other.
      */
+    private ElapsedTime startTimer = new ElapsedTime();
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime driveTimer = new ElapsedTime();
@@ -307,10 +308,10 @@ public class StarterBotAuto extends OpMode
         }
 
         if (gamepad1.dpadUpWasPressed()) {
-            timeBeforeStart += 1;
+            timeBeforeStart += 1.0;
         }
         if (gamepad1.dpadDownWasPressed()) {
-            timeBeforeStart -= 1;
+            timeBeforeStart -= 1.0;
         }
 
 
@@ -326,6 +327,7 @@ public class StarterBotAuto extends OpMode
      */
     @Override
     public void start() {
+        startTimer.reset();
     }
 
     /*
@@ -333,6 +335,10 @@ public class StarterBotAuto extends OpMode
      */
     @Override
     public void loop() {
+        if (startTimer.seconds() < timeBeforeStart) {
+            return;
+        }
+
         /*
          * TECH TIP: Switch Statements
          * switch statements are an excellent way to take advantage of an enum. They work very
