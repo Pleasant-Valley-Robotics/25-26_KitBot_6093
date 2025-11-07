@@ -330,10 +330,10 @@ public class StarterBotAutoFar extends OpMode
 
 
         if (gamepad1.dpadUpWasPressed()) {
-            timeBeforeStart += 1;
+            timeBeforeStart += 1.0;
         }
         if (gamepad1.dpadDownWasPressed()) {
-            timeBeforeStart -= 1;
+            timeBeforeStart -= 1.0;
         }
 
 
@@ -367,9 +367,9 @@ public class StarterBotAutoFar extends OpMode
          * of the members of the enum for a match, since if we find the "break" line in one case,
          * we know our enum isn't reflecting a different state.
          */
-        //if (startTimer.seconds() >= timeBeforeStart) {
-          //  return;
-        //}
+        if (startTimer.seconds() < timeBeforeStart) {
+            return;
+        }
 
         switch (autonomousState){
             /*
