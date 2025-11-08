@@ -89,8 +89,8 @@ public class StarterBotAuto extends OpMode
 
     final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1250; // Originally 1125
     final double LAUNCHER_CLOSE_MIN_VELOCITY = 1240;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 420; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 440; //480
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 450; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 455; //480
 
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
@@ -455,9 +455,9 @@ public class StarterBotAuto extends OpMode
 
             case TURN_FROM_TAG:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = -97;
+                    robotRotationAngle = -98;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 97;
+                    robotRotationAngle = 98;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
@@ -553,8 +553,8 @@ public class StarterBotAuto extends OpMode
                 if (shotRequested) {
                     launchState = LaunchState.PREPARE;
                     shotTimer.reset();
-                    //leftFeeder.setPower(0);
-                    //rightFeeder.setPower(0);
+                    leftFeeder.setPower(0);
+                    rightFeeder.setPower(0);
                 }
                 break;
             case PREPARE:
@@ -568,8 +568,8 @@ public class StarterBotAuto extends OpMode
                 break;
             case LAUNCH:
                 if (feederTimer.seconds() > FEED_TIME) {
-                    //leftFeeder.setPower(-0.1);
-                    //rightFeeder.setPower(-0.1);
+                    leftFeeder.setPower(0);
+                    rightFeeder.setPower(0);
 
                     if(shotTimer.seconds() > TIME_BETWEEN_SHOTS){
                         launchState = LaunchState.IDLE;

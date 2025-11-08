@@ -99,15 +99,15 @@ public class StarterBotAutoFar extends OpMode
      */
     final double LAUNCHER_FAR_TARGET_VELOCITY = 1525.0;
     final double LAUNCHER_FAR_MIN_VELOCITY = 1515.0;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 430; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 440; //480
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 450; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 455; //480
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood
      * that each shot will score.
      */
     final double TIME_BETWEEN_SHOTS = 4.0;
-    final double TIME_BETWEEN_CYCLES = 3.0;
+    final double TIME_BETWEEN_CYCLES = 3.5;
 
     /*
      * Here we capture a few variables used in driving the robot. DRIVE_SPEED and ROTATE_SPEED
