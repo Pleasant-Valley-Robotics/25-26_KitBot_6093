@@ -89,7 +89,7 @@ public class StarterBotAutoFar extends OpMode
      */
     private VisionPortal visionPortal;
 
-    final double FEED_TIME = 0.50; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME = 0.3; //The feeder servos run this long when a shot is requested.
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
@@ -98,9 +98,9 @@ public class StarterBotAutoFar extends OpMode
      * at. The minimum velocity is a threshold for determining when to fire.
      */
     final double LAUNCHER_FAR_TARGET_VELOCITY = 1525.0;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1475.0;
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 380; //440
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 400; //480
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1515.0;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 430; //440
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 440; //480
     /*
      * The number of seconds that we wait between each of our 3 shots from the launcher. This
      * can be much shorter, but the longer break is reasonable since it maximizes the likelihood

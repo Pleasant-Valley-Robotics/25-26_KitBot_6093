@@ -65,8 +65,8 @@ import java.util.Locale;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "KitbotTeleop", group = "StarterBot")
-public class StarterBotTeleop extends OpMode{
+@TeleOp(name = "OjasSoloTeleop", group = "StarterBot")
+public class OjasSoloTeleop extends OpMode{
     final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested. (originally 0.20)
     final double TRIPLE_FEED_TIME_SECONDS = 2.50;
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
@@ -81,8 +81,8 @@ public class StarterBotTeleop extends OpMode{
 
     final double LAUNCHER_FAR_TARGET_VELOCITY = 1540.0;
     final double LAUNCHER_FAR_MIN_VELOCITY = 1530.0;
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1300; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1200;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1200; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1190;
 
     final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
     final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;
@@ -262,21 +262,21 @@ public class StarterBotTeleop extends OpMode{
          * Here we give the user control of the speed of the launcher motor without automatically
          * queuing a shot.
          */
-        if (gamepad2.x) {
+        if (gamepad1.a) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CLOSE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
-        } else if (gamepad2.a) { // stop flywheel
+        } else if (gamepad1.x) { // stop flywheel
             launcher.setVelocity(STOP_SPEED);
             leftFeeder.setPower(0);
             rightFeeder.setPower(0);
         }
-        else if (gamepad2.b){
+        else if (gamepad1.b){
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_CYCLE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_CYCLE_TARGET_VELOCITY);
-        } else if (gamepad2.y) {
+        } else if (gamepad1.y) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_FAR_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_FAR_TARGET_VELOCITY);
-        } else if (gamepad2.left_trigger>0) {
+        } else if (gamepad1.dpad_down) {
             LAUNCHER_ACTIVE_MIN_VELOCITY = LAUNCHER_REVERSE_MIN_VELOCITY;
             launcher.setVelocity(LAUNCHER_REVERSE_TARGET_VELOCITY);
             leftFeeder.setPower(-1);
@@ -293,10 +293,10 @@ public class StarterBotTeleop extends OpMode{
         if (leftLaunchState == LaunchState.IDLE) {
             //tripleLaunch(gamepad1.rightBumperWasPressed());
         }
-        if(gamepad2.right_bumper){
+        if(gamepad1.right_trigger>0){
             leftFeeder.setPower(1);
             rightFeeder.setPower(1);
-        } else if (gamepad2.left_bumper) {
+        } else if (gamepad1.left_trigger>0) {
             leftFeeder.setPower(-1);
             rightFeeder.setPower(-1);
         }
