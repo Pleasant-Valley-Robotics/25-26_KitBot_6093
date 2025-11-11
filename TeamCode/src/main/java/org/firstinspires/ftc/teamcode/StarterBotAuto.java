@@ -78,7 +78,7 @@ public class StarterBotAuto extends OpMode
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     private VisionPortal visionPortal;
 
-    final double FEED_TIME = 0.3; //The feeder servos run this long when a shot is requested.
+    final double FEED_TIME = 0.2; //The feeder servos run this long when a shot is requested.
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
@@ -455,9 +455,9 @@ public class StarterBotAuto extends OpMode
 
             case TURN_FROM_TAG:
                 if(alliance == Alliance.RED){
-                    robotRotationAngle = -98;
+                    robotRotationAngle = -97.5;
                 } else if (alliance == Alliance.BLUE){
-                    robotRotationAngle = 98;
+                    robotRotationAngle = 98.5;
                 }
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
