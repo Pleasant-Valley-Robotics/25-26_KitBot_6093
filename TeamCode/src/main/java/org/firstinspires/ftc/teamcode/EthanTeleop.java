@@ -65,7 +65,7 @@ import java.util.Locale;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "KitbotTeleop", group = "StarterBot")
+@TeleOp(name = "EthanTeleop", group = "StarterBot")
 public class EthanTeleop extends OpMode{
     final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested. (originally 0.20)
     final double TRIPLE_FEED_TIME_SECONDS = 2.50;
