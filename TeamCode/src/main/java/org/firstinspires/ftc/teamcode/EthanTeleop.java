@@ -34,6 +34,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -43,11 +44,17 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.List;
 import java.util.Locale;
 
 /*
@@ -67,6 +74,17 @@ import java.util.Locale;
 
 @TeleOp(name = "EthanTeleop", group = "StarterBot")
 public class EthanTeleop extends OpMode{
+
+    private AprilTagProcessor aprilTag;
+    private HuskyLens huskyLens;
+
+    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+
+    /**
+     * The variable to store our instance of the vision portal.
+     */
+    private VisionPortal visionPortal;
+
     final double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested. (originally 0.20)
     final double TRIPLE_FEED_TIME_SECONDS = 2.50;
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
@@ -146,6 +164,8 @@ public class EthanTeleop extends OpMode{
      */
     @Override
     public void init() {
+        initAprilTag();
+
         leftLaunchState = LaunchState.IDLE;
         rightLaunchState = LaunchState.IDLE;
 
@@ -256,7 +276,11 @@ public class EthanTeleop extends OpMode{
          * both motors work to rotate the robot. Combinations of these inputs can be used to create
          * more complex maneuvers.
          */
-        arcadeDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
+        if (!turnToAprilTag()) {
+            arcadeDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
+        } else {
+            arcadeDrive(-gamepad1.left_stick_y, 0);
+        }
 
         /*
          * Here we give the user control of the speed of the launcher motor without automatically
@@ -417,4 +441,53 @@ public class EthanTeleop extends OpMode{
                 break;
         }
     }
+
+    private void initAprilTag() {
+
+        // Create the AprilTag processor.
+        aprilTag = new AprilTagProcessor.Builder().build();
+
+        // Create the vision portal by using a builder.
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        // Set the camera (webcam vs. built-in RC phone camera).
+        if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        } else {
+            builder.setCamera(BuiltinCameraDirection.BACK);
+        }
+
+
+        // Set and enable the processor.
+        builder.addProcessor(aprilTag);
+
+        // Build the Vision Portal, using the above settings.
+        visionPortal = builder.build();
+
+        // Disable or re-enable the aprilTag processor at any time.
+        //visionPortal.setProcessorEnabled(aprilTag, true);
+
+    }
+    private boolean turnToAprilTag() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        for (int i = 0; i < currentDetections.size(); i++) {
+            if (currentDetections.get(i).id == 24) {
+                double tolerance = 0.02;
+                double deviation = currentDetections.get(i).ftcPose.y;
+
+                if (Math.abs(deviation) > tolerance) {
+                    double kP = 3.0;
+                    double turnPower = kP * deviation;
+
+                    // Clamp between -0.5 and 0.5
+                    turnPower = Math.max(-0.5, Math.min(0.5, turnPower));
+                    arcadeDrive(0, turnPower);
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
