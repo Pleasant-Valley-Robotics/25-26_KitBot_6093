@@ -158,6 +158,8 @@ public class EthanTeleop extends OpMode{
     double backLeftPower;
     double backRightPower;
 
+    boolean manualControl = false;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -267,20 +269,25 @@ public class EthanTeleop extends OpMode{
      */
     @Override
     public void loop() {
-        /*
-         * Here we call a function called arcadeDrive. The arcadeDrive function takes the input from
-         * the joysticks, and applies power to the left and right drive motor to move the robot
-         * as requested by the driver. "arcade" refers to the control style we're using here.
-         * Much like a classic arcade game, when you move the left joystick forward both motors
-         * work to drive the robot forward, and when you move the right joystick left and right
-         * both motors work to rotate the robot. Combinations of these inputs can be used to create
-         * more complex maneuvers.
-         */
-        if (!turnToAprilTag()) {
-            arcadeDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
-        } else {
-            arcadeDrive(-gamepad1.left_stick_y, 0);
+        double forward = -gamepad1.left_stick_y;
+        double rotate;
+
+
+        double aprilTagTurnPower = getAprilTagTurnPower();
+
+        if (gamepad1.x) {
+            manualControl = !manualControl;
         }
+
+
+        if (aprilTagTurnPower != 0.0 && !manualControl) {
+            rotate = aprilTagTurnPower;
+        } else {
+            rotate = gamepad1.right_stick_x;
+        }
+
+        arcadeDrive(forward, rotate);
+
 
         /*
          * Here we give the user control of the speed of the launcher motor without automatically
@@ -347,6 +354,8 @@ public class EthanTeleop extends OpMode{
 
         telemetry.addData("Status", odo.getDeviceStatus());
 
+        telemetry.addData("AprilTag Turn Power", aprilTagTurnPower);
+
         telemetry.update();
 
     }
@@ -359,9 +368,9 @@ public class EthanTeleop extends OpMode{
     }
 
     void arcadeDrive(double forward, double rotate) {
-        double y = -gamepad1.left_stick_y;
-        double x = gamepad1.left_stick_x * 1.1;
-        double r = gamepad1.right_stick_x;
+        double y = forward;
+        double x = gamepad1.left_stick_x * 1.1; // Strafe
+        double r = rotate;
 
         double frontLeftPower  = y + x + r;
         double frontRightPower = y - x - r;
@@ -468,26 +477,32 @@ public class EthanTeleop extends OpMode{
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }
-    private boolean turnToAprilTag() {
+    /**
+     * Calculates the turn power needed to align with AprilTag ID 24.
+     * @return The calculated turn power, or 0.0 if the tag is not visible.
+     */
+    private double getAprilTagTurnPower() {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        for (int i = 0; i < currentDetections.size(); i++) {
-            if (currentDetections.get(i).id == 24) {
-                double tolerance = 0.02;
-                double deviation = currentDetections.get(i).ftcPose.y;
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null && detection.id == 24) {
+                double tolerance = 0.75; // Tolerance in inches
+                double deviation = -detection.ftcPose.z;
+
 
                 if (Math.abs(deviation) > tolerance) {
-                    double kP = 3.0;
+                    double kP = 0.02;
                     double turnPower = kP * deviation;
 
-                    // Clamp between -0.5 and 0.5
-                    turnPower = Math.max(-0.5, Math.min(0.5, turnPower));
-                    arcadeDrive(0, turnPower);
-                }
 
-                return true;
+                    return Math.max(-0.4, Math.min(0.4, turnPower));
+                } else {
+                    // We are aligned, so command no turn.
+                    return 0.0;
+                }
             }
         }
-        return false;
+        // No tag with ID 24 was found, so return 0 to allow manual control.
+        return 0.0;
     }
 
 }
