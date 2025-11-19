@@ -126,6 +126,8 @@ public class EthanTeleop extends OpMode{
     ElapsedTime feederTimer = new ElapsedTime();
     ElapsedTime tripleFeederTime = new ElapsedTime();
 
+    int targetAprilTag = 0;
+
     /*
      * TECH TIP: State Machines
      * We use a "state machine" to control our launcher motor and feeder servos in this program.
@@ -277,6 +279,16 @@ public class EthanTeleop extends OpMode{
 
         if (gamepad1.x) {
             manualControl = !manualControl;
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+            if (!currentDetections.isEmpty()) {
+                for (int i = 0; i < currentDetections.size(); i++ ) {
+                    if (currentDetections.get(i).id == 24 || currentDetections.get(i).id == 20) {
+                        targetAprilTag = currentDetections.get(i).id;
+                    }
+                }
+            } else {
+                manualControl = !manualControl;
+            }
         }
 
 
@@ -484,7 +496,7 @@ public class EthanTeleop extends OpMode{
     private double getAprilTagTurnPower() {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null && detection.id == 24) {
+            if (detection.metadata != null && detection.id == targetAprilTag) {
                 double tolerance = 0.75; // Tolerance in inches
                 double deviation = -detection.ftcPose.z;
 
@@ -501,8 +513,20 @@ public class EthanTeleop extends OpMode{
                 }
             }
         }
-        // No tag with ID 24 was found, so return 0 to allow manual control.
         return 0.0;
     }
+
+    private double getAprilTagShotPower() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null && detection.id == targetAprilTag) {
+                double distance = -detection.ftcPose.x;
+
+                return (distance * 12.5);
+            }
+        }
+        return 0.0;
+    }
+
 
 }
