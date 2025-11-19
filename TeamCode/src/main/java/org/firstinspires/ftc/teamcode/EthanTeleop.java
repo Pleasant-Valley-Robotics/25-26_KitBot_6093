@@ -277,7 +277,7 @@ public class EthanTeleop extends OpMode{
 
         double aprilTagTurnPower = getAprilTagTurnPower();
 
-        if (gamepad1.x) {
+        if (gamepad1.xWasPressed()) {
             manualControl = !manualControl;
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             if (!currentDetections.isEmpty()) {
@@ -286,13 +286,11 @@ public class EthanTeleop extends OpMode{
                         targetAprilTag = currentDetections.get(i).id;
                     }
                 }
-            } else {
-                manualControl = !manualControl;
             }
         }
 
 
-        if (aprilTagTurnPower != 0.0 && !manualControl) {
+        if (!manualControl) {
             rotate = aprilTagTurnPower;
         } else {
             rotate = gamepad1.right_stick_x;
