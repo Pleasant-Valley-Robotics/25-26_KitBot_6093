@@ -36,7 +36,7 @@ public final class ManualFeedbackTuner extends LinearOpMode {
                             //.lineToX(0)
                             //.strafeTo(new Vector2d(0.0, DISTANCE))
                             //.strafeTo(new Vector2d(0.0, 0.0))
-                            .turnTo(90.0)
+                            .turnTo(Math.PI/2)
                             .turnTo(0.0)
                             .build());
                 drive.updatePoseEstimate();
