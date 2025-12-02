@@ -72,7 +72,7 @@ public class Shooter {
 
 
     }
-    public Action spinUp(int targetSpeed) {
+    public Action spinUp(double targetSpeed) {
         return new Action() {
             private boolean initialized = false;
 
@@ -85,7 +85,7 @@ public class Shooter {
 
                 double vel = launcher.getVelocity();
                 packet.put("Shooter Velocity", vel);
-                return vel <(double) targetSpeed;
+                return vel <targetSpeed;
 
             }
         };

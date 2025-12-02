@@ -97,13 +97,13 @@ public class EthanTeleop extends OpMode{
      * at. The minimum velocity is a threshold for determining when to fire.
      */
 
-    final double LAUNCHER_FAR_TARGET_VELOCITY = 1540.0;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1530.0;
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1200; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1190;
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1575;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1570;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1100; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1090;
 
     final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 450;
 
     final double LAUNCHER_REVERSE_MIN_VELOCITY = -500;
     final double LAUNCHER_REVERSE_TARGET_VELOCITY = -550;
@@ -123,7 +123,9 @@ public class EthanTeleop extends OpMode{
 
     private GoBildaPinpointDriver odo;
 
-    ElapsedTime feederTimer = new ElapsedTime();
+    final double FEED_TIME = .35;
+    final double BACK_TIME = .5;
+    ElapsedTime feederTimer = new ElapsedTime(20);
     ElapsedTime tripleFeederTime = new ElapsedTime();
 
     int targetAprilTag = 0;
@@ -297,7 +299,7 @@ public class EthanTeleop extends OpMode{
         }
 
         arcadeDrive(forward, rotate);
-
+        controlServos();
 
         /*
          * Here we give the user control of the speed of the launcher motor without automatically
@@ -323,8 +325,6 @@ public class EthanTeleop extends OpMode{
             leftFeeder.setPower(-1);
             rightFeeder.setPower(-1);
         }
-
-
         /*
          * Now we call our "Launch" function.
          */
@@ -335,15 +335,7 @@ public class EthanTeleop extends OpMode{
             //tripleLaunch(gamepad1.rightBumperWasPressed());
         }
         if(gamepad2.right_bumper){
-            leftFeeder.setPower(1);
-            rightFeeder.setPower(1);
-        } else if (gamepad2.left_bumper) {
-            leftFeeder.setPower(-1);
-            rightFeeder.setPower(-1);
-        }
-        else{
-            leftFeeder.setPower(0);
-            rightFeeder.setPower(0);
+            feederTimer.reset();
         }
         /*
          * Show the state and motor powers
@@ -430,36 +422,7 @@ public class EthanTeleop extends OpMode{
                 break;
         }
     }
-    void launch(boolean shotRequested) {
-        switch (leftLaunchState) {
-            case IDLE:
-                if (shotRequested) {
-                    leftLaunchState = LaunchState.SPIN_UP;
-                }
-                break;
-            case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_CLOSE_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_CLOSE_MIN_VELOCITY) {
-                    leftLaunchState = LaunchState.LAUNCH;
-                    feederTimer.reset();
 
-                }
-                break;
-            case LAUNCH:
-                leftFeeder.setPower(FULL_SPEED);
-                rightFeeder.setPower(FULL_SPEED);
-                feederTimer.reset();
-                leftLaunchState = LaunchState.LAUNCHING;
-                break;
-            case LAUNCHING:
-                if (feederTimer.seconds() > FEED_TIME_SECONDS) {
-                    leftLaunchState = LaunchState.IDLE;
-                    leftFeeder.setPower(STOP_SPEED);
-                    rightFeeder.setPower(STOP_SPEED);
-                }
-                break;
-        }
-    }
 
     private void initAprilTag() {
 
@@ -487,6 +450,21 @@ public class EthanTeleop extends OpMode{
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }
+
+    private void controlServos() {
+        if (feederTimer.seconds() < BACK_TIME) {
+            rightFeeder.setPower(-1);
+            leftFeeder.setPower(-1);
+        } else if (feederTimer.seconds() < BACK_TIME + FEED_TIME) {
+            rightFeeder.setPower(1);
+            leftFeeder.setPower(1);
+        } else {
+            rightFeeder.setPower(0);
+            leftFeeder.setPower(0);
+        }
+    }
+
+
     /**
      * Calculates the turn power needed to align with AprilTag ID 24.
      * @return The calculated turn power, or 0.0 if the tag is not visible.
