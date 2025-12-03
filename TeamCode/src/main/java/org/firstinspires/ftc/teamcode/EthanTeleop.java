@@ -121,7 +121,6 @@ public class EthanTeleop extends OpMode{
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
 
-    private GoBildaPinpointDriver odo;
 
     final double FEED_TIME = .35;
     final double BACK_TIME = .5;
@@ -187,7 +186,6 @@ public class EthanTeleop extends OpMode{
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
         rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
@@ -200,11 +198,6 @@ public class EthanTeleop extends OpMode{
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        odo.setOffsets(-84.0, -168.0, DistanceUnit.MM);
-        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-        odo.resetPosAndIMU();
 
         /*
          * Here we set our launcher to the RUN_USING_ENCODER runmode.
@@ -245,12 +238,6 @@ public class EthanTeleop extends OpMode{
         /*
          * Tell the driver that initialization is complete.
          */
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("X offset", odo.getXOffset(DistanceUnit.INCH));
-        telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.INCH));
-        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
-        telemetry.addData("Heading Scalar", odo.getYawScalar());
-        telemetry.update();
 
     }
 
@@ -347,14 +334,6 @@ public class EthanTeleop extends OpMode{
         telemetry.addData("Servo Power R", rightFeeder.getPower());
         telemetry.addData("Servo Power L", rightFeeder.getPower());
 
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        String velocity = String.format(Locale.US,"{XVel: %.3f, YVel: %.3f, HVel: %.3f}", odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH), odo.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
-
-        telemetry.addData("Status", odo.getDeviceStatus());
 
         telemetry.addData("AprilTag Turn Power", aprilTagTurnPower);
 
