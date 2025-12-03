@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @Config
-@Autonomous(name = "Close Auto Blue - RR", group = "Autonomous")
+@Autonomous(name = "Close Auto Red - RR", group = "Autonomous")
 public class CloseAutoRedRR extends LinearOpMode {
     @Override
     public void runOpMode() {
@@ -52,7 +52,7 @@ public class CloseAutoRedRR extends LinearOpMode {
         for (int i = 0; i < shotsToCycle; i++) {
             Actions.runBlocking(
                     new SequentialAction(
-                            shooter.spinUp(450),
+                            shooter.spinUp(480),
                             new SleepAction(0.5),
                             shooter.fireBall()
                     )
@@ -61,15 +61,15 @@ public class CloseAutoRedRR extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        new SleepAction(1),
                         turnToShoot.build(),
-                        new SleepAction(.5),
-                        shooter.spinUp(1100),
-                        new SleepAction(.5),
-                        shooter.fireBall(),
-                        shooter.spinUp(1100),
+                        shooter.spinUp(1120),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1100),
+                        shooter.spinUp(1120),
+                        new SleepAction(.5),
+                        shooter.fireBall(),
+                        shooter.spinUp(1120),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),

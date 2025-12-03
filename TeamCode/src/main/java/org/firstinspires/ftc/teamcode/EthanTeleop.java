@@ -97,13 +97,13 @@ public class EthanTeleop extends OpMode{
      * at. The minimum velocity is a threshold for determining when to fire.
      */
 
-    final double LAUNCHER_FAR_TARGET_VELOCITY = 1575;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1570;
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1100; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1090;
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1590;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1580;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1120; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1110;
 
-    final double LAUNCHER_CYCLE_MIN_VELOCITY = 440;
-    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 450;
+    final double LAUNCHER_CYCLE_MIN_VELOCITY = 480;
+    final double LAUNCHER_CYCLE_TARGET_VELOCITY = 470;
 
     final double LAUNCHER_REVERSE_MIN_VELOCITY = -500;
     final double LAUNCHER_REVERSE_TARGET_VELOCITY = -550;
@@ -123,7 +123,7 @@ public class EthanTeleop extends OpMode{
 
 
     final double FEED_TIME = .35;
-    final double BACK_TIME = .5;
+    final double BACK_TIME = .2;
     ElapsedTime feederTimer = new ElapsedTime(20);
     ElapsedTime tripleFeederTime = new ElapsedTime();
 
@@ -161,7 +161,7 @@ public class EthanTeleop extends OpMode{
     double backLeftPower;
     double backRightPower;
 
-    boolean manualControl = false;
+    boolean manualControl = true;
 
 
     /*

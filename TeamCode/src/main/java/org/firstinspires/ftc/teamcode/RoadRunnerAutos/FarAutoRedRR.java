@@ -39,7 +39,7 @@ public class FarAutoRedRR extends LinearOpMode {
         for (int i = 0; i < shotsToCycle; i++) {
             Actions.runBlocking(
                     new SequentialAction(
-                            shooter.spinUp(450),
+                            shooter.spinUp(480),
                             new SleepAction(0.5),
                             shooter.fireBall()
                     )
@@ -48,15 +48,15 @@ public class FarAutoRedRR extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        new SleepAction(1),
                         gotoShoot.build(),
-                        new SleepAction(.5),
-                        shooter.spinUp(1575),
-                        new SleepAction(.5),
-                        shooter.fireBall(),
-                        shooter.spinUp(1575),
+                        shooter.spinUp(1590),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1575),
+                        shooter.spinUp(1590),
+                        new SleepAction(.5),
+                        shooter.fireBall(),
+                        shooter.spinUp(1590),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),

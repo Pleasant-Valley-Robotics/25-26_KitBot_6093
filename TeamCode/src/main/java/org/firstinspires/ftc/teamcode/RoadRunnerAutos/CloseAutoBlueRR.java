@@ -17,11 +17,11 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 public class CloseAutoBlueRR extends LinearOpMode {
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(56.245, 52.4553, Math.toRadians(131.0884));
+        Pose2d initialPose = new Pose2d(-56.245, -52.4553, Math.toRadians(-131.0884));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-        Vector2d pos1 = new Vector2d(30.9436, 24.6258);
-        Vector2d pos2 = new Vector2d(59.6704, 25.7748);
+        Vector2d pos1 = new Vector2d(-30.9436, -24.6258);
+        Vector2d pos2 = new Vector2d(-59.6704, -25.7748);
 
         TrajectoryActionBuilder gotoAprilRead = drive.actionBuilder(initialPose)
                 .strafeToLinearHeading(pos1, Math.toRadians(152.0563));
@@ -52,7 +52,7 @@ public class CloseAutoBlueRR extends LinearOpMode {
         for (int i = 0; i < shotsToCycle; i++) {
             Actions.runBlocking(
                     new SequentialAction(
-                            shooter.spinUp(450),
+                            shooter.spinUp(480),
                             new SleepAction(0.5),
                             shooter.fireBall()
                     )
@@ -61,15 +61,15 @@ public class CloseAutoBlueRR extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        new SleepAction(1),
                         turnToShoot.build(),
-                        new SleepAction(.5),
-                        shooter.spinUp(1100),
-                        new SleepAction(.5),
-                        shooter.fireBall(),
-                        shooter.spinUp(1100),
+                        shooter.spinUp(1120),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1100),
+                        shooter.spinUp(1120),
+                        new SleepAction(.5),
+                        shooter.fireBall(),
+                        shooter.spinUp(1120),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),
