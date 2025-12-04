@@ -15,8 +15,23 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 @Autonomous(name = "Close Auto Red - RR", group = "Autonomous")
 public class CloseAutoRedRR extends LinearOpMode {
+
+    public double timeBeforeStart = 2.0;
+
     @Override
     public void runOpMode() {
+
+        while (!isStopRequested() && !opModeIsActive()) {
+            if (gamepad1.dpadUpWasPressed()) {
+                timeBeforeStart += 1.0;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                timeBeforeStart -= 1.0;
+            }
+            telemetry.addData("Wait Time", timeBeforeStart);
+        }
+
+
         Pose2d initialPose = new Pose2d(-56.245, 52.4553, Math.toRadians(131.0884));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
@@ -38,7 +53,7 @@ public class CloseAutoRedRR extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        Actions.runBlocking(new SleepAction(1.5));
+        Actions.runBlocking(new SleepAction(timeBeforeStart));
 
 
 
@@ -63,13 +78,13 @@ public class CloseAutoRedRR extends LinearOpMode {
                 new SequentialAction(
                         new SleepAction(1),
                         turnToShoot.build(),
-                        shooter.spinUp(1120),
+                        shooter.spinUp(1450),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1120),
+                        shooter.spinUp(1450),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1120),
+                        shooter.spinUp(1450),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),
