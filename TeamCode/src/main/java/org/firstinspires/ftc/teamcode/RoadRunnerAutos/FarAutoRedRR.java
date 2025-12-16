@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 @Autonomous(name = "Far Auto Red - RR", group = "Autonomous")
 public class FarAutoRedRR extends LinearOpMode {
-    public double timeBeforeStart = 2.0;
+    public double timeBeforeStart = 5.0;
 
     @Override
     public void runOpMode() {
@@ -65,13 +65,13 @@ public class FarAutoRedRR extends LinearOpMode {
                 new SequentialAction(
                         new SleepAction(1),
                         gotoShoot.build(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),

@@ -97,10 +97,10 @@ public class EthanTeleop extends OpMode{
      * at. The minimum velocity is a threshold for determining when to fire.
      */
 
-    final double LAUNCHER_FAR_TARGET_VELOCITY = 1610;
-    final double LAUNCHER_FAR_MIN_VELOCITY = 1610;
-    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1400; // Originally 1125
-    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1390;
+    final double LAUNCHER_FAR_TARGET_VELOCITY = 1630;
+    final double LAUNCHER_FAR_MIN_VELOCITY = 1630;
+    final double LAUNCHER_CLOSE_TARGET_VELOCITY = 1500; // Originally 1125
+    final double LAUNCHER_CLOSE_MIN_VELOCITY = 1500;
 
     final double LAUNCHER_CYCLE_MIN_VELOCITY = 470;
     final double LAUNCHER_CYCLE_TARGET_VELOCITY = 480;

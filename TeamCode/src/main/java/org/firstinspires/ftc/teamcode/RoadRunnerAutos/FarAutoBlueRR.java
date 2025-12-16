@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.RoadRunnerAutos.*;
 @Autonomous(name = "Far Auto Blue - RR", group = "Autonomous")
 public class FarAutoBlueRR extends LinearOpMode {
 
-    public double timeBeforeStart = 2.0;
+    public double timeBeforeStart = 5.0;
 
 
     @Override
@@ -70,13 +70,13 @@ public class FarAutoBlueRR extends LinearOpMode {
                 new SequentialAction(
                         new SleepAction(1),
                         gotoShoot.build(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
-                        shooter.spinUp(1610),
+                        shooter.spinUp(1630),
                         new SleepAction(.5),
                         shooter.fireBall(),
                         new SleepAction(.25),
