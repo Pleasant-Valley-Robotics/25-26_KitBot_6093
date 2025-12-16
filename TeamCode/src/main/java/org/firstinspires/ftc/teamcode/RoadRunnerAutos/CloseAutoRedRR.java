@@ -92,5 +92,8 @@ public class CloseAutoRedRR extends LinearOpMode {
                         shooter.stopSpin()
                 )
         );
+
+        drive.updatePoseEstimate();
+        PoseStorage.currentPose = drive.localizer.getPose();
     }
 }

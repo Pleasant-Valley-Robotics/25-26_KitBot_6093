@@ -23,6 +23,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.features2d.Feature2D;
 
+import java.lang.Math;
 import java.util.List;
 
 public class Shooter {
@@ -85,7 +86,7 @@ public class Shooter {
 
                 double vel = launcher.getVelocity();
                 packet.put("Shooter Velocity", vel);
-                return vel <targetSpeed;
+                return 10 > Math.abs(vel - targetSpeed);
 
             }
         };

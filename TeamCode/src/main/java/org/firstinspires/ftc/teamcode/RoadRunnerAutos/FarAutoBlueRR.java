@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.RoadRunnerAutos.*;
 @Autonomous(name = "Far Auto Blue - RR", group = "Autonomous")
 public class FarAutoBlueRR extends LinearOpMode {
 
-    public double timeBeforeStart = 2.0;
+    public double timeBeforeStart = 5.0;
 
 
     @Override
@@ -85,5 +85,9 @@ public class FarAutoBlueRR extends LinearOpMode {
 
                 )
         );
+
+        drive.updatePoseEstimate();
+        PoseStorage.currentPose = drive.localizer.getPose();
+
     }
 }

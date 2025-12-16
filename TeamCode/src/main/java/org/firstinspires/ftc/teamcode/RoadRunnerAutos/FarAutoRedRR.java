@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 @Autonomous(name = "Far Auto Red - RR", group = "Autonomous")
 public class FarAutoRedRR extends LinearOpMode {
-    public double timeBeforeStart = 2.0;
+    public double timeBeforeStart = 5.0;
 
     @Override
     public void runOpMode() {
@@ -80,5 +80,9 @@ public class FarAutoRedRR extends LinearOpMode {
 
                 )
         );
+
+        drive.updatePoseEstimate();
+        PoseStorage.currentPose = drive.localizer.getPose();
+
     }
 }
