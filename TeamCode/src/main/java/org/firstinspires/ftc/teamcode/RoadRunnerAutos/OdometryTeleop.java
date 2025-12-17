@@ -3,17 +3,12 @@ package org.firstinspires.ftc.teamcode.RoadRunnerAutos;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -28,7 +23,8 @@ public class OdometryTeleop extends OpMode {
     final double LAUNCHER_CYCLE_VELOCITY = 480;
 
     double CURRENT_TARGET_VELOCITY = 1575;
-    boolean manualControl = true;
+    boolean manualRotate = true;
+    boolean manualDrive = true;
 
 
     final double FEED_TIME = .35;
@@ -58,19 +54,42 @@ public class OdometryTeleop extends OpMode {
         drive.updatePoseEstimate();
         TelemetryPacket packet = new TelemetryPacket();
 
+        double rotate;
+
         SequentialAction index = new SequentialAction(
                 shooter.spinUp(450),
                 shooter.fireBall()
         );
 
 
-        if (gamepad1.xWasPressed()) manualControl = !manualControl;
 
+
+
+        if (gamepad1.xWasPressed()) manualRotate = !manualRotate;
         if (gamepad2.xWasPressed()) runningActions.add(shooter.spinUp(LAUNCHER_CLOSE_VELOCITY));
         if (gamepad2.bWasPressed()) runningActions.add(shooter.spinUp(LAUNCHER_CYCLE_VELOCITY));
         if (gamepad2.yWasPressed()) runningActions.add(shooter.spinUp(LAUNCHER_FAR_VELOCITY));
+        if (gamepad2.aWasPressed()) runningActions.add(shooter.stopSpin());
+        if (gamepad1.bWasPressed()) drive.localizer.setPose(new Pose2d(0, 0, 0));
+        if (gamepad2.right_bumper) runningActions.add(shooter.fireBall());
+        if (gamepad1.dpad_down) manualDrive = true;
 
-        if (gamepad2.left_bumper) runningActions.add(shooter.fireBall());
+        if (gamepad1.aWasPressed()) {
+            drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position.x, drive.localizer.getPose().position.y, 0));
+        }
+
+        if (gamepad1.yWasPressed()) {
+            manualDrive = false;
+            TrajectoryActionBuilder park = drive.actionBuilder(drive.localizer.getPose()).strafeToLinearHeading(new Vector2d(43.4175, 18.4409 * PoseStorage.isRed), Math.toRadians(0.0));
+            runningActions.add(park.build());
+
+        }
+
+        if (!manualRotate) {
+            rotate = autoLockAngle();
+        } else {
+            rotate = gamepad1.right_stick_x;
+        }
 
         // update running actions
         List<Action> newActions = new ArrayList<>();
@@ -81,11 +100,10 @@ public class OdometryTeleop extends OpMode {
             }
         }
 
-        if (gamepad1.a) {
-            drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position.x, drive.localizer.getPose().position.y, 0));
-        }
 
-        driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        if (manualDrive) {
+            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, rotate);
+        }
 
         drive.updatePoseEstimate();
         PoseStorage.currentPose = drive.localizer.getPose();
@@ -121,6 +139,29 @@ public class OdometryTeleop extends OpMode {
         // Finally, call the drive method with robot relative forward and right amounts
         drive(newForward, newRight, rotate);
     }
+
+    public double autoLockAngle() {
+        double xDif = (-72) - drive.localizer.getPose().position.x;
+        double yDif =  (72 * PoseStorage.isRed) - drive.localizer.getPose().position.y;
+        double tolerance = 0.03; // Tolerance in inches
+        double targetHeading = Math.atan(xDif/yDif);
+
+        double deviation = targetHeading+drive.localizer.getPose().heading.toDouble();
+
+
+        if (Math.abs(deviation) > tolerance) {
+            double kP = 1.0;
+            double turnPower = kP * deviation;
+
+
+            return Math.max(-0.6, Math.min(0.6, turnPower));
+        } else {
+            // We are aligned, so command no turn.
+            return 0.0;
+        }
+    }
+
+
 
     // Thanks to FTC16072 for sharing this code!!
     public void drive(double forward, double right, double rotate) {
