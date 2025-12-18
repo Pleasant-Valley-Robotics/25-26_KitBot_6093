@@ -80,7 +80,7 @@ public class OdometryTeleop extends OpMode {
 
         if (gamepad1.yWasPressed()) {
             manualDrive = false;
-            TrajectoryActionBuilder park = drive.actionBuilder(drive.localizer.getPose()).strafeToLinearHeading(new Vector2d(43.4175, 18.4409 * PoseStorage.isRed), Math.toRadians(0.0));
+            TrajectoryActionBuilder park = drive.actionBuilder(drive.localizer.getPose()).strafeToLinearHeading(new Vector2d(-42, 33 * PoseStorage.isRed), Math.toRadians(0.0));
             runningActions.add(park.build());
 
         }
@@ -106,6 +106,12 @@ public class OdometryTeleop extends OpMode {
         }
 
         drive.updatePoseEstimate();
+        telemetry.addData("X position", drive.localizer.getPose().position.x);
+        telemetry.addData("Y position", drive.localizer.getPose().position.y);
+        telemetry.addData("Heading", drive.localizer.getPose().heading);
+        telemetry.addData("hypot",getShotPower());
+        telemetry.update();
+
         PoseStorage.currentPose = drive.localizer.getPose();
 
         runningActions = newActions;
@@ -141,13 +147,29 @@ public class OdometryTeleop extends OpMode {
     }
 
     public double autoLockAngle() {
-        double xDif = (-72) - drive.localizer.getPose().position.x;
-        double yDif =  (72 * PoseStorage.isRed) - drive.localizer.getPose().position.y;
-        double tolerance = 0.03; // Tolerance in inches
-        double targetHeading = Math.atan(xDif/yDif);
+        double xDif = (72) - drive.localizer.getPose().position.x;
+        double yDif =  (-72 * PoseStorage.isRed) - drive.localizer.getPose().position.y;
+        double tolerance = 0.03; // Tolerance in radians
+        double targetHeading = Math.atan2(yDif, xDif);
+        double realHeading = drive.localizer.getPose().heading.toDouble();
 
-        double deviation = targetHeading+drive.localizer.getPose().heading.toDouble();
+        while (realHeading > 180) {
+            realHeading -= 180;
+        }
 
+        while (realHeading < -180) {
+            realHeading += 180;
+        }
+
+        double deviation = targetHeading + realHeading;
+
+
+        telemetry.addData("Target Heading", targetHeading);
+        telemetry.addData("X difference", xDif);
+        telemetry.addData("Y difference", yDif);
+        telemetry.addData("Deviation", deviation);
+
+        telemetry.update();
 
         if (Math.abs(deviation) > tolerance) {
             double kP = 1.0;
@@ -159,6 +181,13 @@ public class OdometryTeleop extends OpMode {
             // We are aligned, so command no turn.
             return 0.0;
         }
+    }
+
+    public double getShotPower() {
+        double xDif = (-72) - drive.localizer.getPose().position.x;
+        double yDif =  (72 * PoseStorage.isRed) - drive.localizer.getPose().position.y;
+        double distanceFromGoal = Math.sqrt(Math.pow(xDif, 2) + Math.pow(yDif, 2));
+        return distanceFromGoal;
     }
 
 
