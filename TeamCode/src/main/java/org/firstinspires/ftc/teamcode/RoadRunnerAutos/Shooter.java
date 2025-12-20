@@ -129,7 +129,7 @@ public class Shooter {
         };
 
     }
-    
+
     public Action fireBall() {
         return new Action() {
             private boolean movingForward = false;
@@ -192,5 +192,7 @@ public class Shooter {
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }
+
+    public double getVelocity() {return launcher.getVelocity();}
 
 }
