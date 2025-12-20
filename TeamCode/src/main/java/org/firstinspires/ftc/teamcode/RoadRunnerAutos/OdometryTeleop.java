@@ -24,6 +24,7 @@ public class OdometryTeleop extends OpMode {
 
     double CURRENT_TARGET_VELOCITY = 1575;
     boolean manualRotate = true;
+    boolean slowMode = false;
 
 
     Vector2d parkingPos = null;
@@ -69,6 +70,7 @@ public class OdometryTeleop extends OpMode {
         if (gamepad2.aWasPressed()) shooterActions.add(shooter.stopSpin());
         if (gamepad2.right_bumper) shooterActions.add(shooter.fireBall());
 
+        slowMode = gamepad1.left_bumper;
         if (gamepad1.xWasPressed()) manualRotate = !manualRotate;
         if (gamepad1.bWasPressed()) drive.localizer.setPose(new Pose2d(0, 0, Math.toRadians(90 * PoseStorage.isRed)));
         if (gamepad1.aWasPressed()) drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position.x, drive.localizer.getPose().position.y, Math.toRadians(90)));
@@ -136,7 +138,7 @@ public class OdometryTeleop extends OpMode {
         telemetry.addData("X position", drive.localizer.getPose().position.x);
         telemetry.addData("Y position", drive.localizer.getPose().position.y);
         telemetry.addData("Heading", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
-        telemetry.addData("hypot", getShotPower());
+        telemetry.addData("launch power", getShotPower());
         telemetry.addData("Current launcher speed", shooter.getVelocity());
         telemetry.update();
 
@@ -229,8 +231,13 @@ public class OdometryTeleop extends OpMode {
         double backRightPower = forward + right - rotate;
         double backLeftPower = forward - right + rotate;
 
+
         double maxPower = 1.0;
         double maxSpeed = 1.0;  // make this slower for outreaches
+
+        if (slowMode){
+            maxSpeed = 0.25;
+        }
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
