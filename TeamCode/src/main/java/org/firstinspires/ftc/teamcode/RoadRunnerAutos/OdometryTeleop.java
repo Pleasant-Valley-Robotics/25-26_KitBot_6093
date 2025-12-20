@@ -26,10 +26,7 @@ public class OdometryTeleop extends OpMode {
     boolean manualRotate = true;
     boolean manualDrive = true;
 
-
-    final double FEED_TIME = .35;
-    final double BACK_TIME = .5;
-    ElapsedTime feederTimer = new ElapsedTime(20);
+    
 
     int targetAprilTag = 0;
 
@@ -47,6 +44,8 @@ public class OdometryTeleop extends OpMode {
     public void init() {
         drive = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         shooter = new Shooter(hardwareMap);
+
+
     }
 
     @Override
@@ -70,17 +69,17 @@ public class OdometryTeleop extends OpMode {
         if (gamepad2.bWasPressed()) runningActions.add(shooter.spinUp(LAUNCHER_CYCLE_VELOCITY));
         if (gamepad2.yWasPressed()) runningActions.add(shooter.spinUp(LAUNCHER_FAR_VELOCITY));
         if (gamepad2.aWasPressed()) runningActions.add(shooter.stopSpin());
-        if (gamepad1.bWasPressed()) drive.localizer.setPose(new Pose2d(0, 0, 0));
+        if (gamepad1.bWasPressed()) drive.localizer.setPose(new Pose2d(0, 0, Math.toRadians(180)));
         if (gamepad2.right_bumper) runningActions.add(shooter.fireBall());
         if (gamepad1.dpad_down) manualDrive = true;
 
         if (gamepad1.aWasPressed()) {
-            drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position.x, drive.localizer.getPose().position.y, 0));
+            drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position.x, drive.localizer.getPose().position.y, Math.toRadians(180)));
         }
 
         if (gamepad1.yWasPressed()) {
             manualDrive = false;
-            TrajectoryActionBuilder park = drive.actionBuilder(drive.localizer.getPose()).strafeToLinearHeading(new Vector2d(-42, 33 * PoseStorage.isRed), Math.toRadians(0.0));
+            TrajectoryActionBuilder park = drive.actionBuilder(drive.localizer.getPose()).strafeToLinearHeading(new Vector2d(42, -33 * PoseStorage.isRed), Math.toRadians(180));
             runningActions.add(park.build());
 
         }
@@ -102,13 +101,13 @@ public class OdometryTeleop extends OpMode {
 
 
         if (manualDrive) {
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, rotate);
+            driveFieldRelative(gamepad1.left_stick_y, -gamepad1.left_stick_x, rotate);
         }
 
         drive.updatePoseEstimate();
         telemetry.addData("X position", drive.localizer.getPose().position.x);
         telemetry.addData("Y position", drive.localizer.getPose().position.y);
-        telemetry.addData("Heading", drive.localizer.getPose().heading);
+        telemetry.addData("Heading", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
         telemetry.addData("hypot",getShotPower());
         telemetry.update();
 
@@ -147,29 +146,24 @@ public class OdometryTeleop extends OpMode {
     }
 
     public double autoLockAngle() {
-        double xDif = (72) - drive.localizer.getPose().position.x;
-        double yDif =  (-72 * PoseStorage.isRed) - drive.localizer.getPose().position.y;
+        double xDif = -72 - drive.localizer.getPose().position.x;
+        double yDif =  72 * PoseStorage.isRed - drive.localizer.getPose().position.y;
         double tolerance = 0.03; // Tolerance in radians
+
         double targetHeading = Math.atan2(yDif, xDif);
-        double realHeading = drive.localizer.getPose().heading.toDouble();
+        targetHeading = AngleUnit.normalizeRadians(targetHeading);
 
-        while (realHeading > 180) {
-            realHeading -= 180;
-        }
+        double deviation = drive.localizer.getPose().heading.toDouble() - targetHeading;
+        deviation = AngleUnit.normalizeRadians(deviation);
 
-        while (realHeading < -180) {
-            realHeading += 180;
-        }
+        telemetry.addData("atan", Math.atan2(yDif, xDif));
 
-        double deviation = targetHeading + realHeading;
-
-
-        telemetry.addData("Target Heading", targetHeading);
+        telemetry.addData("Target Heading", Math.toDegrees(targetHeading));
         telemetry.addData("X difference", xDif);
         telemetry.addData("Y difference", yDif);
-        telemetry.addData("Deviation", deviation);
+        telemetry.addData("Deviation",Math.toDegrees(deviation));
 
-        telemetry.update();
+
 
         if (Math.abs(deviation) > tolerance) {
             double kP = 1.0;

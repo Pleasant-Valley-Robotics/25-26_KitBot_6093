@@ -83,6 +83,6 @@ public class FarAutoRedRR extends LinearOpMode {
 
         drive.updatePoseEstimate();
         PoseStorage.currentPose = drive.localizer.getPose();
-
+        PoseStorage.isRed = 1;
     }
 }
